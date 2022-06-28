@@ -25,43 +25,20 @@
   <script>
     //effect代表的是副作用函数,如果函数发生了变化,会重新执行;
     //reactive将数据变成响应式,将数据变成proxy代理 ;
-    //const { effect, reactive, shallowReactive, readonly, shallowReadonly } = VueReactivity ;
-    //const { effect, reactive } = Vue;
-
-    //shallowReactive, readonly, shallowReadonly为作业,自己实现下,都是基于reactive;
-    //vue3中的代理都是用proxy来解决的,一般不再使用defineProperty(不过ref中还是用的);
-    //const { effect, reactive } = VueReactivity;
-    //const data = { name: 'fang', age: 13, address: { num: 517 } }
-    //const state = reactive(data)
-    //const state = shallowReactive({ name: 'fang', age: 13, address: { num: 517 } })
-    //const state = readonly({ name: 'fang', age: 13, address: { num: 517 } })
-    //const state = shallowReadonly({ name: 'fang', age: 13, address: { num: 517 } })
+    const { effect, reactive } = VueReactivity;
+    const data = { name: 'fang', age: 13, address: { num: 517 } }
+    const state = reactive(data)
     //console.log('state--->', state)
-    /* console.log('state.address--->', state.address)
+    //console.log('state.address--->', state.address)
     effect(() => {//此effect函数默认会先执行一次,对响应式数据取值(取值的过程中数据会依赖于当前的effect)
       document.getElementById('app').innerHTML = `${state.name}今年${state.age}岁了;`
     })
-    //稍后name和age变化会重新执行effect函数;
+    /* //稍后name和age变化会重新执行effect函数;
     setTimeout(() => {
       state.age = 14
       //state.address.num = 123
       //state.age = 123
     }, 1000) */
-
-    /* //特殊场景: 一个对象要调用reactive生成响应式对象,要节约性能,多次的调用所生成的响应式对象都要是同一个;
-    const { effect, reactive } = VueReactivity;
-    const data = { name: 'fang', age: 13, address: { num: 517 } }
-    const state1 = reactive(data)
-    const state2 = reactive(data)
-    console.log('state1===state2--->', state1===state2) */
-
-    //特殊场景: 对象F要调用reactive生成响应式对象A,再用响应式对象A去调用reactive生成响应式对象B,响应式对象A与响应式对象B都要是同一个代理对象;
-    const { effect, reactive } = VueReactivity;
-    const data = { name: 'fang', age: 13, address: { num: 517 } }
-    //debugger
-    const state1 = reactive(data)
-    const state2 = reactive(state1)
-    console.log('state1===state2--->', state1===state2)
   </script>
 </body>
 
