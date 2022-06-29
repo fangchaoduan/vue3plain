@@ -29,23 +29,63 @@ var VueReactivity = (() => {
   var ReactiveEffect = class {
     constructor(fn) {
       this.fn = fn;
+      this.parent = null;
+      this.deps = [];
       this.active = true;
     }
     run() {
       if (!this.active) {
-        this.fn;
+        return this.fn();
       }
       try {
+        this.parent = activeEffect;
         activeEffect = this;
         return this.fn();
       } finally {
-        activeEffect = void 0;
+        activeEffect = this.parent;
+        this.parent = null;
       }
     }
   };
   function effect(fn) {
     const _effect = new ReactiveEffect(fn);
     _effect.run();
+  }
+  var targetMap = /* @__PURE__ */ new WeakMap();
+  function track(target, type, key, thisReactiveEffect = activeEffect) {
+    var activeEffect2 = thisReactiveEffect || activeEffect2;
+    if (!activeEffect2) {
+      return;
+    }
+    let depsMap = targetMap.get(target);
+    if (!depsMap) {
+      depsMap = /* @__PURE__ */ new Map();
+      targetMap.set(target, depsMap);
+    }
+    let dep = depsMap.get(key);
+    if (!dep) {
+      dep = /* @__PURE__ */ new Set();
+      depsMap.set(key, dep);
+    }
+    let shouldTrack = !dep.has(activeEffect2);
+    if (shouldTrack) {
+      dep.add(activeEffect2);
+      activeEffect2.deps.push(dep);
+    }
+  }
+  function trigger(target, type, key, value, oldValue, theWeakMap = targetMap, thisReactiveEffect = activeEffect) {
+    var activeEffect2 = thisReactiveEffect || activeEffect2;
+    var targetMap2 = theWeakMap || targetMap2;
+    const depsMap = targetMap2 == null ? void 0 : targetMap2.get(target);
+    if (!depsMap) {
+      return;
+    }
+    const effects = depsMap.get(key);
+    effects == null ? void 0 : effects.forEach((theReactiveEffect) => {
+      if (theReactiveEffect !== activeEffect2) {
+        theReactiveEffect.run();
+      }
+    });
   }
 
   // packages/shared/src/index.ts
@@ -59,10 +99,16 @@ var VueReactivity = (() => {
       if (key === "__v_isReactive" /* IS_REACTIVE */) {
         return true;
       }
+      track(target, `get`, key, activeEffect);
       return Reflect.get(target, key, receiver);
     },
     set(target, key, value, receiver) {
-      return Reflect.set(target, key, value, receiver);
+      const oldValue = target[key];
+      const result = Reflect.set(target, key, value, receiver);
+      if (oldValue !== value) {
+        trigger(target, `set`, key, value, oldValue);
+      }
+      return result;
     }
   };
 

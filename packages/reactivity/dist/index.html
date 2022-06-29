@@ -28,11 +28,47 @@
     const { effect, reactive } = VueReactivity;
     const data = { name: 'fang', age: 13, address: { num: 517 } }
     const state = reactive(data)
-    //console.log('state--->', state)
-    //console.log('state.address--->', state.address)
+    //用户传入一个回调函数,回调函数会执行一次;
+    //同时在执行回调函数时,会进行一次依赖收集,即函数中的响应式对象的属性值变化了,就会重新执行该函数;
     effect(() => {//此effect函数默认会先执行一次,对响应式数据取值(取值的过程中数据会依赖于当前的effect)
-      document.getElementById('app').innerHTML = `${state.name}今年${state.age}岁了;`
+      //state.age = Math.random()
+      document.getElementById('app').innerHTML = `${state.name}今年${state.age}岁了;`//执行该effect内部的回调函数时,此时activeEffect可能为ReactiveEffect;
+
+      state.name
+      state.name
     })
+    state.address//此时activeEffect为undefined;
+
+    setTimeout(() => {
+      state.age++
+    }, 1000)
+
+    /* //特殊场景: 改值了,但改的值没effect;
+    setTimeout(() => {
+      state.add++
+    }, 1000) */
+    /* //特殊场景: 改值了,但新旧值一样;
+    setTimeout(() => {
+      state.age=state.age
+    }, 1000) */
+
+    /* //特殊场景: 改值了,改了两个值;那目前就先调用两次;
+    setTimeout(() => {
+      state.age++
+      state.name++
+    }, 1000) */
+
+    /* //特殊场景: effect中改了effect追踪中的响应式对象的属性,会造成死循环;
+    effect(() => {//此effect函数默认会先执行一次,对响应式数据取值(取值的过程中数据会依赖于当前的effect)
+      state.age = Math.random()
+      document.getElementById('app').innerHTML = `${state.name}今年${state.age}岁了;`//执行该effect内部的回调函数时,此时activeEffect可能为ReactiveEffect;
+
+      state.name
+      state.name
+    }) */
+
+
+
     /* //稍后name和age变化会重新执行effect函数;
     setTimeout(() => {
       state.age = 14
