@@ -1,5 +1,8 @@
 export let activeEffect: ReactiveEffect | undefined = undefined;
 
+//停止effect的收集;
+//清空`源对象的某个属性`对该`ReactiveEffect实例`的所有关联;
+//告知该`ReactiveEffect实例`,已经没有任何一个`源对象的某个属性`引用了它;
 function cleanupEffect(effect: ReactiveEffect) {
   const { deps } = effect//deps收集的是与该`ReactiveEffect实例`关联的所有`源对象的某个属性对应的所有ReactiveEffect实例集合Set`;
 
@@ -22,10 +25,10 @@ class ReactiveEffect {
   public deps: Array<Set<ReactiveEffect>> = [];
   //这里表示在实例上新增了active属性;
   public active: boolean = true;//effect的激活状态;默认是激活状态;
-  constructor(public fn: Function) {//用户传递的参数也会放在this上,相当于this.fn=fn;
+  constructor(public fn: Function, public scheduler?: Function | undefined) {//用户传递的参数也会放在this上,相当于this.fn=fn;
   }
   //run就是执行effect;
-  run() {
+  run(): unknown {
     //这里表示如果是非激活的情况,只需要执行函数,不需要进行依赖收集;
     if (!this.active) {
       return this.fn()
@@ -61,12 +64,26 @@ class ReactiveEffect {
       this.parent = null//不手动清好像也没问题,不过好像parent还是会记录旧的effect;
     }
   }
-}
 
-export function effect(fn: Function) {
+  stop() {
+    if (this.active) {
+      this.active = false
+      cleanupEffect(this)//停止effect的收集;
+    }
+  }
+}
+interface runnerFunction {
+  (value: any): Function;
+  effect: ReactiveEffect;
+}
+export function effect(fn: Function, option: { scheduler?: Function | undefined } = {}): runnerFunction {
   //这里fn可以根据状态变化,重新执行,effect可以嵌套着写;
-  const _effect = new ReactiveEffect(fn)//创建响应式的effect;
+  const _effect = new ReactiveEffect(fn, option?.scheduler)//创建响应式的effect;
   _effect.run()//默认先执行一次;
+
+  const runner: runnerFunction = _effect.run.bind(_effect)//绑定this指向;
+  runner.effect = _effect //将ReactiveEffect实例挂载到runner函数上;
+  return runner
 }
 
 
@@ -97,8 +114,6 @@ export function track(target: Object, type: 'get' | 'set', key: PropertyKey, thi
   }
   let shouldTrack: boolean = !dep.has(activeEffect)//去重了,即已经有了该ReactiveEffect实例后,后续就不再放入set了;
   if (shouldTrack) {
-    console.log('5')
-    //debugger
     dep.add(activeEffect)
     //存放的是属性对应的Set,Set里有多个ReactiveEffect实例,activeEffect只是Set里中的某个ReactiveEffect实例;// name:new Set();
     activeEffect.deps.push(dep)//让ReactiveEffect实例记录住对应的dep,稍后清理的时候会用到;
@@ -130,11 +145,14 @@ export function trigger(target: Object, type: 'get' | 'set', key: PropertyKey, v
     //如果拷贝,会在effectList.forEach()中-->ReactiveEffect实例.run()中-->cleanupEffect(this)从effects删除当前ReactiveEffect实例-->ReactiveEffect实例.fn()中-->读到属性时在track()中重新向effects添加当前ReactiveEffect实例-->effectList.forEach()执行结束;
 
     effectList.forEach((theReactiveEffect: ReactiveEffect) => {
-      console.log('3')
-      debugger
       //我们在执行effect的时候,又要执行自己,那我们需要屏蔽掉,不要无限调用;
       if (theReactiveEffect !== activeEffect) {
-        theReactiveEffect.run()
+        //theReactiveEffect.run()
+        if (theReactiveEffect.scheduler) {
+          theReactiveEffect.scheduler()//如果用户传入了调度函数,则用用户的;
+        } else {
+          theReactiveEffect.run()//否则调用用户的第一个回调函数,默认刷新视图;
+        }
       }
 
 

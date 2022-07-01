@@ -24,7 +24,7 @@
 
   <script>
     const { effect, reactive } = VueReactivity;
-    const state = reactive({ flag: true, name: `第一次name`, age: 30 })
+    /* const state = reactive({ flag: true, name: `第一次name`, age: 30 })
     //期望的是每次执行effect前的时候都可以清理一遍依赖,再执行时再重新收集;
     effect(() => { // 副作用函数 (effect执行渲染了页面)
       console.log(`state.flag->${state.flag}; 应根据${state.flag ? "name" : "age"}更新`)
@@ -38,7 +38,57 @@
         console.log(`修改name，原则上不更新`)
         state.name = `第二次name`
       }, 1000);
-    }, 1000)
+    }, 1000) */
+
+    /* console.log('自己包')
+    const state = reactive({ flag: true, name: '第一次名', age: 31 })
+    const renner = effect(() => {
+      document.body.innerHTML = state.age
+    })
+
+    //effectScope()用到;
+    renner.effect.stop()
+    setTimeout(() => {
+      state.age = 1000
+
+      setTimeout(() => {
+        renner()
+      }, 2000)
+    }, 1000) */
+
+    console.log('自己包')
+    let waiting = false
+    const state = reactive({ flag: true, name: '第一次名', age: 31 })
+    const renner = effect(() => {
+      document.body.innerHTML = state.age
+    }, {
+      scheduler() {//调度,如何更新自己决定;
+        console.log(`run`)
+        if (!waiting) {
+          waiting = true
+          setTimeout(() => {
+            renner()//此时才真正执行fn(),更新页面;
+            waiting = false
+          }, 1000)
+
+        }
+      }
+    })
+
+    state.age = 1000
+    state.age = 2000
+    state.age = 3000
+    state.age = 4000
+    state.age = 5000
+
+
+    /* setTimeout(() => {
+      state.age = 1000
+      state.age = 2000
+      state.age = 3000
+      state.age = 4000
+      state.age = 5000
+    }, 3000) */
 
   </script>
 </body>
