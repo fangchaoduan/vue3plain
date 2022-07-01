@@ -23,58 +23,23 @@
   <!-- 这里是vue本体,一般公共可访问比较稳定的api都放这里; -->
 
   <script>
-    //effect代表的是副作用函数,如果函数发生了变化,会重新执行;
-    //reactive将数据变成响应式,将数据变成proxy代理 ;
     const { effect, reactive } = VueReactivity;
-    const data = { name: 'fang', age: 13, address: { num: 517 } }
-    const state = reactive(data)
-    //用户传入一个回调函数,回调函数会执行一次;
-    //同时在执行回调函数时,会进行一次依赖收集,即函数中的响应式对象的属性值变化了,就会重新执行该函数;
-    effect(() => {//此effect函数默认会先执行一次,对响应式数据取值(取值的过程中数据会依赖于当前的effect)
-      //state.age = Math.random()
-      document.getElementById('app').innerHTML = `${state.name}今年${state.age}岁了;`//执行该effect内部的回调函数时,此时activeEffect可能为ReactiveEffect;
-
-      state.name
-      state.name
-    })
-    state.address//此时activeEffect为undefined;
-
+    const state = reactive({ flag: true, name: `第一次name`, age: 30 })
+    //期望的是每次执行effect前的时候都可以清理一遍依赖,再执行时再重新收集;
+    effect(() => { // 副作用函数 (effect执行渲染了页面)
+      console.log(`state.flag->${state.flag}; 应根据${state.flag ? "name" : "age"}更新`)
+      document.body.innerHTML = state.flag ? state.name : state.age
+    });
     setTimeout(() => {
-      state.age++
+      console.log(`修改state.flag前,应渲染页面一次;`)
+      state.flag = false;
+      console.log(`修改state.flag后;`)
+      setTimeout(() => {
+        console.log(`修改name，原则上不更新`)
+        state.name = `第二次name`
+      }, 1000);
     }, 1000)
 
-    /* //特殊场景: 改值了,但改的值没effect;
-    setTimeout(() => {
-      state.add++
-    }, 1000) */
-    /* //特殊场景: 改值了,但新旧值一样;
-    setTimeout(() => {
-      state.age=state.age
-    }, 1000) */
-
-    /* //特殊场景: 改值了,改了两个值;那目前就先调用两次;
-    setTimeout(() => {
-      state.age++
-      state.name++
-    }, 1000) */
-
-    /* //特殊场景: effect中改了effect追踪中的响应式对象的属性,会造成死循环;
-    effect(() => {//此effect函数默认会先执行一次,对响应式数据取值(取值的过程中数据会依赖于当前的effect)
-      state.age = Math.random()
-      document.getElementById('app').innerHTML = `${state.name}今年${state.age}岁了;`//执行该effect内部的回调函数时,此时activeEffect可能为ReactiveEffect;
-
-      state.name
-      state.name
-    }) */
-
-
-
-    /* //稍后name和age变化会重新执行effect函数;
-    setTimeout(() => {
-      state.age = 14
-      //state.address.num = 123
-      //state.age = 123
-    }, 1000) */
   </script>
 </body>
 

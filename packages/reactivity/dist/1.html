@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试reactivity</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+
+  <script src="./reactivity.global.js"></script>
+  <!-- 这里引用的是自己的包; -->
+
+  <!-- <script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script> -->
+  <!-- @vue是来自于vue的幽灵依赖,需要在.npmrc中配置,才能访问到它;这些是单独的 -->
+
+
+  <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+  <!-- 这里是vue本体,一般公共可访问比较稳定的api都放这里; -->
+
+  <script>
+    //effect代表的是副作用函数,如果函数发生了变化,会重新执行;
+    //reactive将数据变成响应式,将数据变成proxy代理 ;
+    const { effect, reactive } = VueReactivity;
+    const data = { name: 'fang', age: 13, address: { num: 517 } }
+    const state = reactive(data)
+    //用户传入一个回调函数,回调函数会执行一次;
+    //同时在执行回调函数时,会进行一次依赖收集,即函数中的响应式对象的属性值变化了,就会重新执行该函数;
+    effect(() => {//此effect函数默认会先执行一次,对响应式数据取值(取值的过程中数据会依赖于当前的effect)
+      //state.age = Math.random()
+      document.getElementById('app').innerHTML = `${state.name}今年${state.age}岁了;`//执行该effect内部的回调函数时,此时activeEffect可能为ReactiveEffect;
+
+      state.name
+      state.name
+    })
+    state.address//此时activeEffect为undefined;
+
+    setTimeout(() => {
+      state.age = 100
+      state.age = 200
+    }, 1000)
+
+  </script>
+</body>
+
+</html>

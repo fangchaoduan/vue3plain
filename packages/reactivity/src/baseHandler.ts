@@ -28,6 +28,7 @@ export const mutableHandlers = {
     //这里可以监控到用户设置值了;
     const oldValue: unknown = target[key]//此时还没改原对象,所以从源对象里取的值依旧是老值;
     const result = Reflect.set(target, key, value, receiver)
+
     if (oldValue !== value) {//值变化了;
       //要更新;
       trigger(target, `set`, key, value, oldValue)

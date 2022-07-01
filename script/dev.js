@@ -40,10 +40,10 @@ build({
     //监控文件变化--文件一变化,就重新打印,说明已经重新构建好了;
     onRebuild(error) {
       if (!error) {
-        console.log(`rebuilt~~~`);
+        console.log(`${new Date().toLocaleString()} rebuilt~~~`);
       }
     },
   },
 }).then(() => {
-  console.log(`watching~~~`);
+  console.log(`${new Date().toLocaleString()} watching~~~`);
 });
