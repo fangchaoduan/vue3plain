@@ -20,7 +20,7 @@ function cleanupEffect(effect: ReactiveEffect) {
 }
 
 //把用户的一次effect的创建一个对应的ReactiveEffect实例;
-class ReactiveEffect {
+export class ReactiveEffect {
   public parent: ReactiveEffect | null | undefined = null;//`该ReactiveEffect实例对应的effect`的父effect对应的ReactiveEffect实例;默认没父节点;
   public deps: Array<Set<ReactiveEffect>> = [];
   //这里表示在实例上新增了active属性;
@@ -53,9 +53,9 @@ class ReactiveEffect {
       activeEffect = this
 
       //这里需要在执行用户函数之前将之前收集的内容清空,activeEffect.deps = [Set<ReactiveEffect>,Set<ReactiveEffect>,...]
-      console.log("cleanupEffect start");
+      //console.log("cleanupEffect start");
       cleanupEffect(this)
-      console.log("cleanupEffect end");
+      //console.log("cleanupEffect end");
 
 
       return this.fn()//当稍后调用取值操作的时候,就可以获取到这个全局的activeEffect了;
@@ -112,12 +112,22 @@ export function track(target: Object, type: 'get' | 'set', key: PropertyKey, thi
     dep = new Set()
     depsMap.set(key, dep)
   }
-  let shouldTrack: boolean = !dep.has(activeEffect)//去重了,即已经有了该ReactiveEffect实例后,后续就不再放入set了;
-  if (shouldTrack) {
-    dep.add(activeEffect)
-    //存放的是属性对应的Set,Set里有多个ReactiveEffect实例,activeEffect只是Set里中的某个ReactiveEffect实例;// name:new Set();
-    activeEffect.deps.push(dep)//让ReactiveEffect实例记录住对应的dep,稍后清理的时候会用到;
+  trackEffects(dep, activeEffect)
+}
+
+export function trackEffects(dep: Set<ReactiveEffect> | undefined, thisReactiveEffect: ReactiveEffect | undefined = activeEffect) {
+  var activeEffect: ReactiveEffect | undefined = thisReactiveEffect || activeEffect//好像ts中不能直接使用与本地变量同名的全局变量?
+
+  if (activeEffect) {
+
+    let shouldTrack: boolean = !dep.has(activeEffect)//去重了,即已经有了该ReactiveEffect实例后,后续就不再放入set了;
+    if (shouldTrack) {
+      dep.add(activeEffect)
+      //存放的是属性对应的Set,Set里有多个ReactiveEffect实例,activeEffect只是Set里中的某个ReactiveEffect实例;// name:new Set();
+      activeEffect.deps.push(dep)//让ReactiveEffect实例记录住对应的dep,稍后清理的时候会用到;
+    }
   }
+
 }
 
 
@@ -139,7 +149,8 @@ export function trigger(target: Object, type: 'get' | 'set', key: PropertyKey, v
 
   //永远在执行之前,先拷贝一份,不要关联引用
   if (effects) {
-    const effectList: Set<ReactiveEffect> = new Set(effects)
+    triggerEffects(effects)
+    /* const effectList: Set<ReactiveEffect> = new Set(effects)
     //如果不拷贝,会在effects.forEach()中-->ReactiveEffect实例.run()中-->cleanupEffect(this)从effects删除当前ReactiveEffect实例-->ReactiveEffect实例.fn()中-->读到属性时在track()中重新向effects添加当前ReactiveEffect实例-->导致effects.forEach()永远执行不完;
     //类似于: const arr = [1]; arr.forEach((item) => { arr.length = 0;arr.push(1)});
     //如果拷贝,会在effectList.forEach()中-->ReactiveEffect实例.run()中-->cleanupEffect(this)从effects删除当前ReactiveEffect实例-->ReactiveEffect实例.fn()中-->读到属性时在track()中重新向effects添加当前ReactiveEffect实例-->effectList.forEach()执行结束;
@@ -156,23 +167,32 @@ export function trigger(target: Object, type: 'get' | 'set', key: PropertyKey, v
       }
 
 
-    })
+    }) */
   }
 
 }
 
+export function triggerEffects(effects: Set<ReactiveEffect>) {
+  const effectList: Set<ReactiveEffect> = new Set(effects)
+  //如果不拷贝,会在effects.forEach()中-->ReactiveEffect实例.run()中-->cleanupEffect(this)从effects删除当前ReactiveEffect实例-->ReactiveEffect实例.fn()中-->读到属性时在track()中重新向effects添加当前ReactiveEffect实例-->导致effects.forEach()永远执行不完;
+  //类似于: const arr = [1]; arr.forEach((item) => { arr.length = 0;arr.push(1)});
+  //如果拷贝,会在effectList.forEach()中-->ReactiveEffect实例.run()中-->cleanupEffect(this)从effects删除当前ReactiveEffect实例-->ReactiveEffect实例.fn()中-->读到属性时在track()中重新向effects添加当前ReactiveEffect实例-->effectList.forEach()执行结束;
+
+  effectList.forEach((theReactiveEffect: ReactiveEffect) => {
+    //我们在执行effect的时候,又要执行自己,那我们需要屏蔽掉,不要无限调用;
+    if (theReactiveEffect !== activeEffect) {
+      //theReactiveEffect.run()
+      if (theReactiveEffect.scheduler) {
+        theReactiveEffect.scheduler()//如果用户传入了调度函数,则用用户的;
+      } else {
+        theReactiveEffect.run()//否则调用用户的第一个回调函数,默认刷新视图;
+      }
+    }
+
+
+  })
+}
 //1) 先搞了一个响应式对象 new Proxy;
 //2) effect默认数据变化要能更新,先将正在执行的effect作为全局变量,渲染(取值),在get方法中进行依赖收集;
 //3) WeakMap<object, Map<PropertyKey, Set<ReactiveEffect>>>,即做了一个全局变量WeakMap<源对象, Map<源对象属性, Set<effect对应实例>>>;
 //4) 稍后用户发生数据变化,会通过对象属性来查找对应的effect对应实例集合Set,找到effect对应实例全部执行;
-
-
-
-/* let set = new Set(['a'])
-set.forEach(item => {
-  set.delete('a')
-  set.add('a')
-  console.log('死')
-}) */
-
-const arr = ['a', 'b', 'c']

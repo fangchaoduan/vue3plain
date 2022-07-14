@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试reactivity</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+
+  <script src="./reactivity.global.js"></script>
+  <!-- 这里引用的是自己的包; -->
+
+  <!-- <script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script> -->
+  <!-- @vue是来自于vue的幽灵依赖,需要在.npmrc中配置,才能访问到它;这些是单独的 -->
+
+  <script>
+    const { effect, reactive, computed } = VueReactivity;
+
+    //computed特点: 缓存;
+
+    const state = reactive({ firname: '一', lastname: '二' })
+    /* const fullName = computed({
+      get() {//defineProperty中的getter;
+        console.log('get', '取值时会执行,但如果已经一次值并且依赖的值没改变过,就不会再执行')
+        return state.firname + state.lastname
+      },
+      set(newValue) {//defineProperty中的setter;
+        console.log(`set`, newValue)
+      }
+    })
+
+    //计算属性是一个特别的ref;
+    //console.log('fullName--->', fullName)
+
+    //访问,要用.value;
+    console.log('fullName.value--->', fullName.value)
+    //fullName = 100;//不能直接改,因为这样会直接把fullName的引用地址给干掉;
+
+    //改值,直接走到set();
+    //fullName.value = 100
+    //fullName.value = 200
+
+    //计算属性的缓存问题;//值没变,不会再执行getter();
+    console.log('2:fullName.value--->', fullName.value)
+    console.log('3:fullName.value--->', fullName.value)
+
+    //计算属性中肯定要有一个缓存的标识,如果这个依赖有变化,要重新执行get,没有变化就不重新执行get;
+    //dirty 是否是脏的;
+
+    //计算属性是一个effect,依赖的属性变化了,会更新dirty的值; */
+
+  
+    const fullName = computed(() => {
+      //这个其实就是get函数;
+      console.log('get', '取值时会执行,但如果已经一次值并且依赖的值没改变过,就不会再执行')
+      return state.firname + state.lastname
+    })//可以把computed当成一个effect,即fullName其实算是`计算属性effect`;
+    //访问,要用.value;
+    //console.log('fullName--->', fullName)
+    //console.log('fullName.value--->', fullName.value)
+    //console.log('2:fullName.value--->', fullName.value)
+    //console.log('3:fullName.value--->', fullName.value)
+
+    effect(() => {
+      app.innerHTML = fullName.value
+    })//计算属性外层的effect;但fullName本身也是一个effect;
+
+    setTimeout(() => {
+      state.firname = '三'
+    }, 1000)
+
+    //1. firname要依赖于计算属性的effect;(即`计算属性effect`);
+    //2. 计算属性收集了外层的effect;
+    //依赖的值变化了,会触发`计算属性effect`重新执行,计算属性重新执行的时候会触发外层;
+  </script>
+</body>
+
+</html>
