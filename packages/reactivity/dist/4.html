@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试reactivity</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+
+  <script src="./reactivity.global.js"></script>
+  <!-- 这里引用的是自己的包; -->
+
+  <!-- <script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script> -->
+  <!-- @vue是来自于vue的幽灵依赖,需要在.npmrc中配置,才能访问到它;这些是单独的 -->
+
+  <script src="../../../node_modules/vue//dist/vue.global.js"></script>
+  <!-- 引入来自于vue依赖中的全局vue对象 -->
+
+</body>
+
+<script>
+  //const { effect, reactive, computed } = VueReactivity;
+  /* const { watch } = VueReactivity
+  console.log('watch--->', watch) */
+
+  /* const { watch, effect, reactive } = Vue
+  console.log(watch)
+  console.log(effect)
+  console.log(reactive) */
+
+  //const { watch, effect, reactive } = Vue
+  //const state = reactive({ name: '方', address: { num: 1 } })
+
+  /* //监控对象无法区分前后的新值和老值;
+  watch(state, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.name = `后`
+  }, 1000) */
+
+  /* // 1) 这种方式就是监控数据变化,数据变化了就重新执行;(原理就类似于effect;)
+  watch(state, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.address.num = 123
+  }, 1000) */
+
+
+  /* //2) 这里可以去监控一个函数,函数的返回值就是老值,更新后获取新值;
+  //监控函数,实际上就是为了在watch里`new ReactiveEffect`中返回的effect执行run()时,使用到getter时触发一次依赖收集;
+  //这里`() => state.address.num`实际上就是`() => {state.address.num}`,通过执行一遍函数,把响应式对象绑定一个ReactiveEffect实例;
+  watch(() => state.address.num, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.address.num = 123
+  }, 1000) */
+
+  /* //watch的本质就是effect; 内部会对用户赶写的数据进行依赖收集;
+  //这样不行,watch的第一个参数要么是一个响应式对象,要么是一个内部使用了响应式对象属性的函数;
+  //当然函数内部不使用响应式对象也行,就是这个watch什么都没监听而已;
+  //可以认为watch的第一个参数类似于`effect的第一个参数--用于依赖收集的函数`,第二个参数就类似于`effect的第二个参数--scheduler函数`;
+  //比如下方的,就相当于`watch(1, function (newValue, oldValue) {console.log(newValue, oldValue)})`;
+  //state.address.num不是一个响应式对象,不可以;
+  watch(state.address.num, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.address.num = 123
+  }, 1000) */
+
+  /* //state.address是一个响应式对象,可以;
+  //不过得监控到对象上的属性变化才会;
+  const { watch, effect, reactive } = Vue
+  const state = reactive({ name: '方', address: { num: 1 } })
+  watch(state.address, function (newValue, oldValue) {
+    console.log('变量--->')
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    console.log(state.address)
+    state.address.num = 123
+    console.log(state.address)
+  }, 1000)
+  setTimeout(() => {
+    console.log(state.address)
+    state.address = 123//不会触发;
+    console.log(state.address)
+  }, 1000) */
+
+
+  /* //可以;
+  watch(()=>state.address, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.address = 123
+  }, 1000) */
+
+  /* const { watch, effect, reactive } = Vue
+  const state = reactive({ name: '方', address: { num: 1 } })
+  watch(state, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.address = 123
+  }, 1000) */
+
+  /* const { watch, effect, reactive } = VueReactivity
+  const state = reactive({ name: '方', address: { num: 1 } })
+  watch(state, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.address.num = 123
+  }, 1000) */
+
+  /* const { watch, effect, reactive } = VueReactivity
+  const state = reactive({ name: '方', address: { num: 1 } })
+  watch(()=>state.address.num, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.address.num = 123 //123 1
+    state.address.num = 456 //456 123
+  }, 1000) */
+
+  /* const { watch, effect, reactive } = VueReactivity
+  const state = reactive({ name: '方', address: { num: 1 } })
+  watch(()=>state.address.num, function (newValue, oldValue) {
+    console.log(newValue, oldValue)
+  })
+  setTimeout(() => {
+    state.address = null //会报错;
+  }, 1000) */
+
+  //当用户向输入框中输入的时候,要根据用户输入的内容,返回结果(返回的过程可能用的是ajax);
+  //watch输入框的内容,输入框的内容一变化就访问接口,渲染页面? //得防抖;但还不行;
+  //比如:
+  //第一次: 我 -> ajax 3s才回来;
+  //第二次: 我爱 -> ajax 2s就回来;
+  //由于第一次的内容最后才返回回来;所以后面返回时,第一次的内容就会覆盖掉第二次的内容;
+
+  /* //const { watch, reactive } = VueReactivity
+  const { watch, reactive } = Vue
+  const state = reactive({ flag: true, name: `方`, age: 30 })
+  let i = 2000
+  function getData(timer) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(timer)
+      }, timer)
+    })
+  }
+
+  //第一次调用watch的时候传入一个回调,第二次调用watch的时候执行上一次传入的回调;
+
+  //1) 第一个调用watch的时候用户注入一个取消的回调;
+  //2) 第二次调用watch的时候会执行第一次用户注入的回调;
+  //3) 第三次调用watch会执行第二次注入的回调;
+
+  //后面的watch触发会将上次watch中的clear置为true;
+  watch(() => state.age, async (newValue, oldValue, onCleanup) => {
+    let clear = false
+    onCleanup(() => {
+      clear = true
+    })
+    i = i - 1000
+    let r = await getData(i)//第一次执行1s后渲染1000,第二次执行0s后渲染0,最终应该是0;
+    if (!clear) {
+      document.body.innerHTML = r
+    }
+    //document.body.innerHTML = r
+  }, { flush: `sync` })
+  state.age = 31
+  state.age = 32
+  setTimeout(()=>{
+    state.age = 35
+  },4500)
+  //问题就出在第一次异步函数比第二次异步函数要慢,导致`第一次异步函数的执行`在`第二个回调函数执行后`才开始,进而页面最终以`第一次异步函数的执行结果`为最终结果; */
+
+
+  const { watch, reactive } = VueReactivity
+  //const { watch, reactive } = Vue
+  const state = reactive({ flag: true, name: `方`, age: 30 })
+  let i = 2000
+  function getData(timer) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(timer)
+      }, timer)
+    })
+  }
+  //第一次调用watch的时候传入一个回调,第二次调用watch的时候执行上一次传入的回调;
+  //1) 第一个调用watch的时候用户注入一个取消的回调;
+  //2) 第二次调用watch的时候会执行第一次用户注入的回调;
+  //3) 第三次调用watch会执行第二次注入的回调;
+  
+  //也就是说,`下一次的watch`必定会执行`上一次watch中注入的回调`;
+  //实际上,就是`时刻0的watch`会执行`上次watch中onCleanup中注入的回调-1`,并且会用onCleanup注入`时刻0的watch还没执行的回调0`;
+  //等到下次再触发同一个`时刻1的watch`时,会执行`时刻0的watch还没执行的回调0`,并注入一个`时刻1的watch还没执行的回调1`,等到下一时刻2再执行`时刻1的watch还没执行的回调1`;
+
+  //后面的watch触发会将上次watch中的clear置为true;
+  watch(() => state.age, async (newValue, oldValue, onCleanup) => {
+    let clear = false
+    onCleanup(() => {
+      console.log('new Date().toJSON()--->', new Date().toJSON())
+      clear = true
+    })
+    i = i - 1000
+    let r = await getData(i)//第一次执行1s后渲染1000,第二次执行0s后渲染0,最终应该是0;
+    if (!clear) {
+      document.body.innerHTML = r
+    }
+    //document.body.innerHTML = r
+  }, { flush: `sync` })
+  state.age = 31
+  state.age = 32
+  state.age = 33
+  state.age = 34
+</script>
+
+</html>

@@ -3,10 +3,14 @@ import { mutableHandlers, ReactiveFlags } from "./baseHandler";
 
 //用来记录一个对象是否已经设置了代理,做一个缓存,如果已经做了代理,就直接返回之前设置过的代理对象;
 //1) 实现同一个对象,代理多次,返回同一个代理;
-const reactiveMap = new WeakMap()//key只能是对象;
+const reactiveMap: WeakMap<object, object> = new WeakMap()//key只能是对象;
 
+//查看一个变量是否为响应式对象中数据;
+export function isReactive(value): boolean {
+  return !!value?.[ReactiveFlags.IS_REACTIVE]
+}
 //1) 将数据转化成响应式的数据,reactive只能做对象的代理;
-export function reactive(target: Object) {
+export function reactive(target: Object): Object | undefined {
   if (!isObject(target)) {
     return
   }
@@ -25,7 +29,7 @@ export function reactive(target: Object) {
     return target
   }
 
-  const proxy = new Proxy(target, mutableHandlers)
+  const proxy: Object = new Proxy(target, mutableHandlers)
 
 
   reactiveMap.set(target, proxy)
