@@ -28,7 +28,7 @@ function traversal(value, set: Set<Object> = new Set()) {
 }
 
 //source是用户传入的对象,cb就是对应的用户的回调;
-export function watch(source, cb) {
+export function watch(source: Function | Object | undefined, cb: Function) {
 
   let getter: Function;
   if (isReactive(source)) {
@@ -41,18 +41,19 @@ export function watch(source, cb) {
       return traversal(source)
     }
   } else if (isFunction(source)) {
-    getter = source
+    getter = source as Function
   } else {
     return
   }
 
   let cleanup: Function | undefined
-  const onCleanup = (fn: Function) => {
+  const onCleanup = (fn: Function | undefined) => {
     cleanup = fn//保存用户的函数;
   }
   let oldValue;
+  //每次watch监听到的值变化了,都会调用一个job;
   const job = () => {
-    if(cleanup){
+    if (cleanup) {
       cleanup();//下一次watch开始触发上一次watch的清理;
     }
     const newValue = effect.run()

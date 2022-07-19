@@ -150,24 +150,6 @@ export function trigger(target: Object, type: 'get' | 'set', key: PropertyKey, v
   //永远在执行之前,先拷贝一份,不要关联引用
   if (effects) {
     triggerEffects(effects)
-    /* const effectList: Set<ReactiveEffect> = new Set(effects)
-    //如果不拷贝,会在effects.forEach()中-->ReactiveEffect实例.run()中-->cleanupEffect(this)从effects删除当前ReactiveEffect实例-->ReactiveEffect实例.fn()中-->读到属性时在track()中重新向effects添加当前ReactiveEffect实例-->导致effects.forEach()永远执行不完;
-    //类似于: const arr = [1]; arr.forEach((item) => { arr.length = 0;arr.push(1)});
-    //如果拷贝,会在effectList.forEach()中-->ReactiveEffect实例.run()中-->cleanupEffect(this)从effects删除当前ReactiveEffect实例-->ReactiveEffect实例.fn()中-->读到属性时在track()中重新向effects添加当前ReactiveEffect实例-->effectList.forEach()执行结束;
-
-    effectList.forEach((theReactiveEffect: ReactiveEffect) => {
-      //我们在执行effect的时候,又要执行自己,那我们需要屏蔽掉,不要无限调用;
-      if (theReactiveEffect !== activeEffect) {
-        //theReactiveEffect.run()
-        if (theReactiveEffect.scheduler) {
-          theReactiveEffect.scheduler()//如果用户传入了调度函数,则用用户的;
-        } else {
-          theReactiveEffect.run()//否则调用用户的第一个回调函数,默认刷新视图;
-        }
-      }
-
-
-    }) */
   }
 
 }

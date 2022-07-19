@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试reactivity</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+
+
+  <script src="../../../node_modules/vue//dist/vue.global.js"></script>
+  <!-- 引入来自于vue依赖中的全局vue对象 -->
+
+
+  <script src="./reactivity.global.js"></script>
+  <!-- 这里引用的是自己的包; -->
+</body>
+
+<script>
+  /* //reactive只支持一个对象类型变成响应式对象;
+  //ref支持把一个普通值-即简单数据类型变成响应式对象;
+  //原理就是把传入的简单数据类型包装成一个对象,再用这个对象进行reactive类似的操作;
+  const { ref } = Vue; */
+
+  /* //只想要一个响应式对象来操作变量;
+  const { reactive } = Vue;
+  const obj = reactive({isShow:false})
+  obj.isShow = true;//就很麻烦,还得要特意一个对象来套一层; */
+
+  /* const { ref } = Vue;
+  const v = ref(0)
+  console.log('v--->', v)//RefImpl {__v_isShallow: false, dep: undefined, __v_isRef: true, _rawValue: 0, _value: 0}; */
+
+  /* //类似于:
+  const fang = {
+    _value: 0,
+    get() {//track依赖收集;
+      return _value
+    },
+    set(newValue) {//trigger设置值,触发属性对应的effect列表;
+      this._value = newValue
+    }
+  } */
+
+  /* const { ref, effect } = Vue
+  const flag = ref(false)
+  effect(() => {
+    app.innerHTML = flag.value ? `你好` : `不好`
+  })
+  setTimeout(() => {
+    flag.value = !flag.value
+  },1000) */
+
+  /* //ref里的值,可以是非对象,也可以是对象;
+  const { ref, effect } = Vue
+  const flag = ref([])
+  console.log("flag--->", flag); */
+
+  /* //ref里的值,可以是非对象,也可以是对象;
+  const { ref, effect } = Vue
+  const flag = ref([])
+  console.log("flag--->", flag);
+  effect(() => {
+    app.innerHTML = flag.value ? `你好` : `不好`
+  })
+  setTimeout(() => {
+    flag.value = !flag.value
+  },1000) */
+
+  /* //ref里的对象也要用.value访问;
+  const { ref, effect } = Vue
+  const flag = ref([])
+  console.log("flag--->", flag);
+  console.log("flag.value--->", flag.value); */
+
+
+  /* const { ref, effect } = VueReactivity
+  const flag = ref(false)
+  console.log("自己的flag--->", flag);
+  effect(() => {
+    app.innerHTML = flag.value ? `你好` : `不好`
+  })
+  setTimeout(() => {
+    flag.value = !flag.value
+  }, 1000) */
+
+  /* //必须要多写school;
+  const { ref, effect, reactive } = VueReactivity
+  const school = reactive({ name: `珠峰`, age: 12 })
+  effect(() => {
+    app.innerHTML = `${school.name}今年${school.age}岁了`
+  }) */
+
+  /* //解构之后,就丧失了响应式的特点了;
+  const { ref, effect, reactive } = VueReactivity
+  const school = reactive({ name: `珠峰`, age: 12 })
+  let { name, age } = school
+  //let age = school.age
+  //let name = school.name
+  effect(() => {
+    app.innerHTML = `${name}今年${age}岁了`
+  })
+  setTimeout(() => {
+    age = 100
+  }, 1000)
+  setTimeout(() => {
+    school.age = 100
+  }, 1000) */
+
+  /* //用toRefs,不过要写value;
+  const { ref, effect, reactive, toRefs } = Vue
+  const school = reactive({ name: `珠峰`, age: 12 })
+  let { name, age } = toRefs(school)
+  effect(() => {
+    app.innerHTML = `${name.value}今年${age.value}岁了`
+  })
+  setTimeout(() => {
+    //实际上还是操作的是school;
+    age.value = 100
+  }, 1000)
+  setTimeout(() => {
+    school.age = 123//也行;
+  }, 2000) */
+
+  /* //自己的;
+  const { ref, effect, reactive, toRefs } = VueReactivity
+  const school = reactive({ name: `珠峰`, age: 12 })
+  let { name, age } = toRefs(school)
+  effect(() => {
+    console.log('name--->', name)
+    app.innerHTML = `${name.value}今年${age.value}岁了`
+  })
+  setTimeout(() => {
+    age.value = 100
+  }, 1000)
+  setTimeout(() => {
+    school.age = 123//也行;
+  }, 2000)
+  setTimeout(() => {
+    school.name = `aa`
+  }, 2000) */
+
+  /* //toRef;
+  //toRefs与toRef类似于node.js中的promisify与promisifyAll;
+  const { ref, effect, reactive, toRefs, toRef } = VueReactivity
+  const school = reactive({ name: `珠峰`, age: 12 })
+  let name = toRef(school, `name`)
+  const age = toRef(school, `age`)
+  effect(() => {
+    console.log('age--->', age)
+    app.innerHTML = `${name.value}今年${age.value}岁了`
+  })
+  setTimeout(() => {
+    age.value = 100
+  }, 1000)
+  setTimeout(() => {
+    school.age = 123//也行;
+  }, 2000)
+  setTimeout(() => {
+    school.name = `aa`
+  }, 2000) */
+
+  //模板里: `<div>{{name.value}}与{{age.value}}</div>`中,最好不要用`.value`;
+  //要舍弃`.value`.
+  //正向的增加ref,反向的帮你取ref;
+  const { ref, effect, reactive, toRefs, toRef } = VueReactivity
+  const school = reactive({ name: `珠峰`, age: 12 })
+  const { name, age } = toRefs(school)
+  effect(() => {
+    console.log('age--->', age)
+    app.innerHTML = `${name.value}今年${age.value}岁了`
+  })
+  setTimeout(() => {
+    age.value = 100
+  }, 1000)
+  setTimeout(() => {
+    school.age = 123//也行;
+  }, 2000)
+  setTimeout(() => {
+    school.name = `aa`
+  }, 2000)
+</script>
+
+</html>

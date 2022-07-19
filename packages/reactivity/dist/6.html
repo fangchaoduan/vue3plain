@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试reactivity</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+
+
+  <script src="../../../node_modules/vue//dist/vue.global.js"></script>
+  <!-- 引入来自于vue依赖中的全局vue对象 -->
+
+
+  <script src="./reactivity.global.js"></script>
+  <!-- 这里引用的是自己的包; -->
+</body>
+
+<script>
+
+  //模板里: `<div>{{name.value}}与{{age.value}}</div>`中,最好不要用`.value`;
+  //要舍弃`.value`.
+
+  //正向的增加ref,反向的帮你取ref;
+
+  /* //const { ref, effect, reactive, toRefs, toRef } = VueReactivity
+  const { ref, effect, reactive, toRefs, toRef, peoxyRefs } = Vue
+  const name = ref(`方`)
+  const age = ref(`13`)
+  //后续其实取值都是在模板中取值的,在模版里取值的时候都会自动ref;
+  //在使用数据的时候,老师把响应式的灵气toRefs,在模板里用的时候不需要再加`.value`了;
+  effect(() => {
+    app.innerHTML = name.value + age.value
+  }) */
+
+  /* //后续其实取值都是在模板中取值的,在模版里取值的时候都会自动ref;
+  //在使用数据的时候,老师把响应式的灵气toRefs,在模板里用的时候不需要再加`.value`了;
+  const { ref, effect, reactive, toRefs, toRef, proxyRefs } = Vue
+  const name = ref(`方`)
+  const age = ref(`13`)
+  const school = proxyRefs({ name, age })//实际上vue渲染时,这个school可以不写,类似于this
+  effect(() => {
+    console.log('school--->', school)
+    app.innerHTML = school.name + school.age + `一`
+  }) */
+
+  /* //模版中类似的做法;
+  const { ref, effect, reactive, toRefs, toRef, proxyRefs } = Vue
+  const name = ref(`方`)
+  const age = ref(`13`)
+  const school = proxyRefs({ name, age })
+  effect(() => {
+    console.log('school--->', school)
+    with (school) {//实际上vue渲染时,这个school可以不写,类似于this或with包了一层;//源码里这个school是包装成了`_ctx`;
+      app.innerHTML = name + age
+    }
+
+  }) */
+
+  /* //源码类似的做法;
+  const { ref, effect, reactive, toRefs, toRef, proxyRefs } = Vue
+  const name = ref(`方`)
+  const age = ref(`13`)
+  const _ctx = proxyRefs({ name, age })
+  effect(() => {
+    console.log('_ctx--->', _ctx)
+    with (_ctx) {//实际上vue渲染时,这个_ctx可以不写,类似于this或with包了一层;
+      app.innerHTML = name + age
+    }
+  }) */
+
+  /* //源码类似的做法;
+  const { ref, effect, reactive, toRefs, toRef, proxyRefs } = Vue
+  const name = ref(`方`)
+  const age = ref(`13`)
+  const _ctx = proxyRefs({ name, age })//实际上vue渲染时,这个_ctx可以不写,类似于this或with包了一层;
+  effect(() => {
+    console.log('_ctx--->', _ctx)
+    app.innerHTML = _ctx.name + _ctx.age
+  }) */
+
+  //reactive effect ref toRefs proxyRefs....
+
+
+  /* const { ref, effect, reactive, toRefs, toRef, proxyRefs } = Vue
+  const name = ref(`方`)
+  const age = ref(`13`)
+  const _ctx = proxyRefs({ name, age,a:1 })//实际上vue渲染时,这个_ctx可以不写,类似于this或with包了一层;
+  effect(() => {
+    console.log('_ctx--->', _ctx)
+    app.innerHTML = _ctx.name + _ctx.age
+  }) */
+
+  const { ref, effect, reactive, toRefs, toRef, proxyRefs } = VueReactivity
+  const name = ref(`方`)
+  const age = ref(`13`)
+  const school = proxyRefs({ name, age,a:1 })//实际上vue渲染时,这个school可以不写,类似于this或with包了一层;
+  effect(() => {
+    console.log('school--->', school)
+    app.innerHTML = school.name + school.age 
+  })
+
+  //reactive effect ref toRefs proxyRefs computed watch ...
+</script>
+
+</html>
