@@ -54,3 +54,75 @@
     `Shift键 + F11键`或`Ctrl键 + Shift键 + ;键` 跳出当前函数并到下一步;
     `F9键` 进行单步调试;
     `Ctrl键 + F8键` 在当前行`停用断点`或`启用断点`;
+16. 可以在源码上写一些注释,在`/examples/1.reactive.html`上使用时,浏览器会`debugger`到源码上;
+17. 如果有些地方不懂,可以在`/packages/包名/__tests__/具体要测试功能名.spec.ts`里找到单元测试,如`/packages/reactivity/__tests__/reactive.spec.ts`里找代码,并仿单元测试的代码去写案例;
+    如:
+
+    ```ts
+    import { reactive, isReactive, toRaw, markRaw } from "../src/reactive";
+    test("proto", () => {
+      const obj = {};
+      const reactiveObj = reactive(obj);
+      expect(isReactive(reactiveObj)).toBe(true);
+      // read prop of reactiveObject will cause reactiveObj[prop] to be reactive
+      // @ts-ignore
+      const prototype = reactiveObj["__proto__"];
+      const otherObj = { data: ["a"] };
+      expect(isReactive(otherObj)).toBe(false);
+      const reactiveOther = reactive(otherObj);
+      expect(isReactive(reactiveOther)).toBe(true);
+      expect(reactiveOther.data[0]).toBe("a");
+    });
+    ```
+
+    改成:(把测试写成ts,使用一些输出)
+
+    ```ts
+    import { reactive, isReactive, toRaw, markRaw } from "../src/reactive";
+    const obj = {};
+    const reactiveObj = reactive(obj);
+    console.log(
+      "isReactive(reactiveObj)===true--->",
+      isReactive(reactiveObj) === true
+    );
+    //expect(isReactive(reactiveObj)).toBe(true);
+    const prototype = reactiveObj["__proto__"];
+    const otherObj = { data: ["a"] };
+    console.log(
+      "isReactive(otherObj)===false--->",
+      isReactive(otherObj) === false
+    );
+    //expect(isReactive(otherObj)).toBe(false);
+    const reactiveOther = reactive(otherObj);
+    console.log(
+      "isReactive(reactiveOther)===true--->",
+      isReactive(reactiveOther) === true
+    );
+    //expect(isReactive(reactiveOther)).toBe(true);
+    console.log(
+      'reactiveOther.data[0]==="a"--->',
+      reactiveOther.data[0] === "a"
+    );
+    //expect(reactiveOther.data[0]).toBe("a");
+    ```
+
+    又改成:(改依赖路径);
+
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+      <script src="../packages/reactivity/dist/reactivity.global.js"></script>
+      <script>
+        import { reactive, isReactive, toRaw, markRaw } from  = VueReactivity;
+        const obj = {};
+        const reactiveObj = reactive(obj);
+        console.log('isReactive(reactiveObj)===true--->',isReactive(reactiveObj)===true)
+        const prototype = reactiveObj["__proto__"];
+        const otherObj = { data: ["a"] };
+        console.log('isReactive(otherObj)===false--->',isReactive(otherObj)===false)
+        const reactiveOther = reactive(otherObj);
+        console.log('isReactive(reactiveOther)===true--->',isReactive(reactiveOther)===true)
+        console.log('reactiveOther.data[0]==="a"--->',reactiveOther.data[0]==="a")
+      </script>
+    </html>
+    ```
