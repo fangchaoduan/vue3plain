@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试运行时runtime-dom</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+</body>
+<!-- <script src="../../../node_modules/vue/dist//vue.global.js"></script> -->
+<script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script>
+
+<!-- <script src="../../../node_modules/@vue/runtime-core/dist//runtime-core.global.js"></script> -->
+<!-- 最终`runtime-dom.global.js`还是提供到core中;不过node_modules并没有单独打包; -->
+
+<script src="./runtime-dom.global.js"></script>
+<script>
+  const { createRenderer, h } = VueRuntimeDOM//VueRuntimeDOM是通过点击并跳转到`../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js`看到的;
+  //参见:[createRenderer用法](https://v3.cn.vuejs.org/api/global-api.html#createrenderer);//createRenderer返回一个Renderer渲染器对象;
+  //参见:[h函数](https://v3.cn.vuejs.org/api/global-api.html#h);//h函数返回一个虚拟节点;
+
+  //渲染函数渲染的是虚拟DOM;
+
+  //createRenderer要传一个对象,对象上的属性为用于创建DOM节点的方法,返回一个Renderer渲染器对象;
+  //`渲染器`就是让用户自己提供`操作DOM元素用到的一系列api`;
+  //之后在调用`渲染器.render()`时,调用用户传入的方法将`渲染器.render()的第一个虚拟节点参数`渲染到`渲染器.render()的第二个DOM节点`上;
+  //实际上[mpvue](https://github.com/Meituan-Dianping/mpvue)的原理也差不多;
+  const renderer = createRenderer({
+    /* createElement(element) {
+      //小程序setData();
+      return document.createElement(element);
+    },
+    setElementText(el, text) {
+      el.innerHTML = text
+    },
+    insert(el, container) {
+      container.appendChild(el)
+    },
+    patchProp(el, key, prevValue, nextValue) {
+      console.log('el,key,nextValue--->', el, key, nextValue)
+    } */
+  })
+
+  //createElement;
+  renderer.render(h('h1', { style: { color: 'red' } }, 'hello'), app)
+
+</script>
+
+</html>
