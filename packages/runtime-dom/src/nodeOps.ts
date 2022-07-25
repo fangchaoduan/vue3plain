@@ -2,12 +2,12 @@ export const nodeOps = {
   //增加 删除 修改 查询
 
   //插入节点;
-  insert(child, parent, anchor = null) {
+  insert(child: Node, parent: Element, anchor: Node = null) {
     parent.insertBefore(child, anchor)//insertBefore可以等价于appendChild;
   },
 
   //remove-删除节点;
-  remove(child) {
+  remove(child: Node) {
     const parentNode = child.parentNode;
     if (parentNode) {
       parentNode.removeChild(child)
@@ -17,11 +17,11 @@ export const nodeOps = {
   //文本节点,元素中的内容;
 
   //修改元素中的文本;-当传入的是元素时;
-  setElementText(el, text) {
+  setElementText(el: Element, text: string) {
     el.textContent = text
   },
   //设置文本节点;-当传入的是文本节点时;
-  setText(node, text) {
+  setText(node: Node, text: string) {
     node.nodeValue = text
   },
 
@@ -30,20 +30,20 @@ export const nodeOps = {
     return document.querySelector(selector)
   },
   //查询父节点;
-  parentNode(node) {
+  parentNode(node: Node) {
     return node.parentNode
   },
   //查询兄弟节点;
-  nextSibling(node) {
+  nextSibling(node: Node) {
     return node.nextSibling
   },
 
   //创建元素节点;
-  createElement(tagName) {
+  createElement(tagName: string) {
     return document.createElement(tagName)
   },
   //创建文本节点;
-  createText(text) {
+  createText(text: string) {
     return document.createTextNode(text)
   }
 
