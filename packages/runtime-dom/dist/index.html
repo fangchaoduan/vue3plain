@@ -13,14 +13,18 @@
 
 </body>
 <!-- <script src="../../../node_modules/vue/dist//vue.global.js"></script> -->
-<!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script> -->
+
+<script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script>
+<!-- vue内部的运行时模块; -->
 
 <!-- <script src="../../../node_modules/@vue/runtime-core/dist//runtime-core.global.js"></script> -->
 <!-- 最终`runtime-dom.global.js`还是提供到core中;不过node_modules并没有单独打包; -->
 
-<script src="./runtime-dom.global.js"></script>
+<!-- <script src="./runtime-dom.global.js"></script> -->
+<!-- 自己的运行时模块; -->
+
 <script>
-  //const { createRenderer, h, render } = VueRuntimeDOM//VueRuntimeDOM是通过点击并跳转到`../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js`看到的;
+  /* //const { createRenderer, h, render } = VueRuntimeDOM//VueRuntimeDOM是通过点击并跳转到`../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js`看到的;
   //参见:[createRenderer用法](https://v3.cn.vuejs.org/api/global-api.html#createrenderer);//createRenderer返回一个Renderer渲染器对象;
   //参见:[h函数](https://v3.cn.vuejs.org/api/global-api.html#h);//h函数返回一个虚拟节点;
 
@@ -30,7 +34,7 @@
   //`渲染器`就是让用户自己提供`操作DOM元素用到的一系列api`;
   //之后在调用`渲染器.render()`时,调用用户传入的方法将`渲染器.render()的第一个虚拟节点参数`渲染到`渲染器.render()的第二个DOM节点`上;
   //实际上[mpvue](https://github.com/Meituan-Dianping/mpvue)的原理也差不多;
-  /* const renderer = createRenderer({
+  const renderer = createRenderer({
     // createElement(element) {
     //   //小程序setData();
     //   return document.createElement(element);
@@ -49,22 +53,70 @@
   //createElement;
   renderer.render(h('h1', { style: { color: 'red' } }, 'hello'), app) */
 
+  /* 
+  //const { createRenderer, h, render } = VueRuntimeDOM
   //render(h('h1', { style: { color: 'red' } }, 'hello'), app)
 
   //h()用于创建一个虚拟DOM;
   //render()用于把虚拟DOM渲染到元素上;
-  //h()与render()都不依赖于平台,所以在runtime-core中;
+  //h()与render()都不依赖于平台,所以在runtime-core中; */
 
-  const { createRenderer, h, render } = VueRuntimeDOM
+  /* const { createRenderer, h, render } = VueRuntimeDOM
+  console.log('createRenderer, h, render--->', createRenderer, h, render)
   //runtime-dom本质上什么也没有做,只是内部封装了一些平台对应的代码;
   //而`runtime-dom`封装好之后,就调用内部的createRenderer(),创建渲染器用于后面渲染;
 
   //具体渲染在`runtime-core`中定义,用`runtime-dom封装好的方法`来把`虚拟DOM`创建成`真实DOM`;
-  //而`createRenderer()`及`createRenderer().render()`
+  //而`createRenderer()`及`createRenderer().render()`;
 
-  console.log('createRenderer, h, render--->', createRenderer, h, render)
+  //h()方法是给用户来用的,具备多样性;
+  //如: h('h1','hello'),h('h1', { style: { color: 'red' } }, 'hello'),h('h1', 'hello'),h('h1', [h('span')]);
+  //所以最好一个底层方法,包装出来h(),让h()支持各种各样的场景;
+  render(h('h1', { style: { color: 'red' } }, 'hello'), app) */
 
 
+  /* //h()函数的用法:
+  //h('div');
+  //h('div',{style:{'color':'red'}});
+  //h('div',{style:{'color':'red'}},'文本节点一');
+  //h('div','文本节点一');
+  //h('div',null,'文本节点一','文本节点二');
+  //h('div',null,h('span'));
+  //h('div',null,[h('span'),h('span','虚拟子节点数组内的文本')]);
+  const { createRenderer, h, render } = VueRuntimeDOM
+  const theVNode = h('div',{style:{'color':'red'}});
+  console.log('theVNode--->',theVNode)
+  render(h('div',{style:{'color':'red'}}), app) */
+
+  /* //h()函数的用法: //可以把h()函数当成一个虚拟节点就好了;
+  //h('div');
+  //h('div',{style:{'color':'red'}});
+  //h('div',{style:{'color':'red'}},'文本节点一');
+  //h('div','文本节点一');
+  //h('div',null,'文本节点一','文本节点二');
+  //h('div',null,h('span'));
+  //h('div',null,h('span','虚拟子节点数组内的文本'));
+  //h('div',null,'文本节点一',h('span','虚拟子节点数组内的文本'));
+  //h('div',null,[h('span'),h('span','虚拟子节点数组内的文本')]);
+  //h('div',null,['文本节点一',h('span','虚拟子节点数组内的文本')]);
+  const { createRenderer, h, render } = VueRuntimeDOM
+  const theVNode = h('div',null,'文本节点一',h('span','虚拟子节点数组内的文本'));
+  console.log('theVNode--->',theVNode)
+  render(theVNode, app) */
+
+  /* //h()函数的用法: 
+  const { createRenderer, h, render } = VueRuntimeDOM
+  //debugger
+  const theVNode = h('div',h('span','虚拟子节点一的文本'),h('span','虚拟子节点二的文本'));//这种写法不行;虽然能编译,但`第二个参数h('span','虚拟子节点一的文本')`不会编译出来;同时会把`第二个参数h('span','虚拟子节点一的文本')`当成`props`;
+  console.log('theVNode--->',theVNode)
+  render(theVNode, app) */
+
+  //h()函数的用法: 
+  const { createRenderer, h, render } = VueRuntimeDOM
+  const theVNode = h('div',null,['文本节点一',h('span','虚拟子节点数组内的文本')]);
+  console.log('theVNode--->',theVNode)
+
+  render(theVNode, app)
 </script>
 
 </html>
