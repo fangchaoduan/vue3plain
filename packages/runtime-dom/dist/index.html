@@ -14,13 +14,13 @@
 </body>
 <!-- <script src="../../../node_modules/vue/dist//vue.global.js"></script> -->
 
-<script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script>
+<!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script> -->
 <!-- vue内部的运行时模块; -->
 
 <!-- <script src="../../../node_modules/@vue/runtime-core/dist//runtime-core.global.js"></script> -->
 <!-- 最终`runtime-dom.global.js`还是提供到core中;不过node_modules并没有单独打包; -->
 
-<!-- <script src="./runtime-dom.global.js"></script> -->
+<script src="./runtime-dom.global.js"></script>
 <!-- 自己的运行时模块; -->
 
 <script>
@@ -75,48 +75,19 @@
   render(h('h1', { style: { color: 'red' } }, 'hello'), app) */
 
 
-  /* //h()函数的用法:
-  //h('div');
-  //h('div',{style:{'color':'red'}});
-  //h('div',{style:{'color':'red'}},'文本节点一');
-  //h('div','文本节点一');
-  //h('div',null,'文本节点一','文本节点二');
-  //h('div',null,h('span'));
-  //h('div',null,[h('span'),h('span','虚拟子节点数组内的文本')]);
-  const { createRenderer, h, render } = VueRuntimeDOM
-  const theVNode = h('div',{style:{'color':'red'}});
-  console.log('theVNode--->',theVNode)
-  render(h('div',{style:{'color':'red'}}), app) */
-
-  /* //h()函数的用法: //可以把h()函数当成一个虚拟节点就好了;
-  //h('div');
-  //h('div',{style:{'color':'red'}});
-  //h('div',{style:{'color':'red'}},'文本节点一');
-  //h('div','文本节点一');
-  //h('div',null,'文本节点一','文本节点二');
-  //h('div',null,h('span'));
-  //h('div',null,h('span','虚拟子节点数组内的文本'));
-  //h('div',null,'文本节点一',h('span','虚拟子节点数组内的文本'));
-  //h('div',null,[h('span'),h('span','虚拟子节点数组内的文本')]);
-  //h('div',null,['文本节点一',h('span','虚拟子节点数组内的文本')]);
-  const { createRenderer, h, render } = VueRuntimeDOM
-  const theVNode = h('div',null,'文本节点一',h('span','虚拟子节点数组内的文本'));
+  /* const { createRenderer, h, render } = VueRuntimeDOM
+  const theVNode = h('div','123');
   console.log('theVNode--->',theVNode)
   render(theVNode, app) */
 
-  /* //h()函数的用法: 
+  /* //h('h1',{},[]);
+  //h('h1',null,'文本')
   const { createRenderer, h, render } = VueRuntimeDOM
-  //debugger
-  const theVNode = h('div',h('span','虚拟子节点一的文本'),h('span','虚拟子节点二的文本'));//这种写法不行;虽然能编译,但`第二个参数h('span','虚拟子节点一的文本')`不会编译出来;同时会把`第二个参数h('span','虚拟子节点一的文本')`当成`props`;
-  console.log('theVNode--->',theVNode)
-  render(theVNode, app) */
+  render(h('h1', { style: { color: 'red' }, onClick: () => { console.log('变量--->') } }, [h('span', '文本'),h('span', '文本二')]), app) */
 
-  //h()函数的用法: 
+
   const { createRenderer, h, render } = VueRuntimeDOM
-  const theVNode = h('div',null,['文本节点一',h('span','虚拟子节点数组内的文本')]);
-  console.log('theVNode--->',theVNode)
-
-  render(theVNode, app)
+  render(h('h1', { style: { color: 'red' }, onClick: () => { console.log('变量--->') } }, '文本'), app)
 </script>
 
 </html>

@@ -7,7 +7,7 @@ export function isVnode(value) {
   return !!value?.__v_isVnode
 }
 
-export declare type VNodeChildren = undefined | null | number | string | Array<string | object | number>
+export declare type VNodeChildren = undefined | null | number | string | Array<string | VNode | number>
 export type VNodeProps = object | undefined | null
 export type VNode = {
   type: string;
@@ -49,7 +49,8 @@ export function createVnode(type: string, props: VNodeProps, children: VNodeChil
   return vnode
 
 }
-
+//9 8+1;
+//17 16+1;
 /* <div>
   <h1></h1>
   <h1></h1>
