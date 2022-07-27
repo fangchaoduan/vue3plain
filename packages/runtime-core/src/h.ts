@@ -40,7 +40,7 @@ export function h(type: string, propsChildren: VNodeProps | VNodeChildren, child
       //是对象但不是数组就走下面;
 
       if (isVnode(propsChildren)) {//虚拟节点就包装成数组;
-        return createVnode(type, null, [propsChildren])
+        return createVnode(type, null, [propsChildren as (string | number | VNode)])
       }
 
       //不是数组,就代表它是对象?
@@ -53,7 +53,7 @@ export function h(type: string, propsChildren: VNodeProps | VNodeChildren, child
       children = Array.from(arguments).slice(2)
     } else if (theLength === 3 && isVnode(children)) {//h('div',{},h('span'));
       //等于3个;
-      children = [children]
+      children = [children as VNode]
     }
 
     /* //第二个参数是字符串时;
@@ -61,7 +61,9 @@ export function h(type: string, propsChildren: VNodeProps | VNodeChildren, child
       return createVnode(type, null,[propsChildren, children])
     } */
 
+
     //其它;
+    //如果有三个参数,默认第二个参数就是props;
     return createVnode(type, propsChildren as object, children)//children的情况有两种--文本或数组;
   }
 }
