@@ -112,10 +112,48 @@
     render(h(Text, '新文本'), app)
   }, 1000); */
 
-  const { createRenderer, h, render, Text } = VueRuntimeDOM
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
   render(h('h1', { style: { color: 'red' } }, '文本'), app)
   setTimeout(() => {
     render(h('h1', { style: { color: 'blue', background: 'red' } }, '文本'), app)
+  }, 1000); */
+
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } }, [h(Text,'999'),'文本',h(Text,'111')]), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本一'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } }, '文本二'), app)
+  }, 1000); */
+
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本一'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } }), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本一'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } },h('span','span中的文本')), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, ['文本一','文本2']), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } },'123'), app)
+  }, 1000); */
+
+  const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '123'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } },['文本一','文本2']), app)
   }, 1000);
 </script>
 

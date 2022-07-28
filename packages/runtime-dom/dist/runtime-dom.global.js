@@ -87,18 +87,20 @@ var VueRuntimeDOM = (() => {
       createText: hostCreateText,
       patchProp: hostPatchProp
     } = renderOptions2;
-    const normalize = (child) => {
-      if (isString(child)) {
-        return createVnode(Text, null, child);
+    const normalize = (child, index) => {
+      if (isString(child[index])) {
+        const vnode = createVnode(Text, null, child[index]);
+        child[index] = vnode;
       }
-      if (isNumber(child)) {
-        return createVnode(Text, null, String(child));
+      if (isNumber(child[index])) {
+        const vnode = createVnode(Text, null, String(child[index]));
+        child[index] = vnode;
       }
-      return child;
+      return child[index];
     };
     const mountChildren = (children, container) => {
       for (let index = 0; index < (children == null ? void 0 : children.length); index++) {
-        const child = normalize(children[index]);
+        const child = normalize(children, index);
         patch(null, child, container);
       }
     };
@@ -139,9 +141,38 @@ var VueRuntimeDOM = (() => {
         }
       }
     };
+    const unmountChildren = (children) => {
+      for (let index = 0; index < children.length; index++) {
+        unmount(children[index]);
+      }
+    };
     const patchChildren = (n1, n2, el) => {
       const c1 = (n1 == null ? void 0 : n1.children) || null;
       const c2 = (n2 == null ? void 0 : n2.children) || null;
+      const prevShapeFlag = n1.shapeFlag;
+      const shapeFlag = n2.shapeFlag;
+      if (shapeFlag & 8 /* TEXT_CHILDREN */) {
+        if (prevShapeFlag & 16 /* ARRAY_CHILDREN */) {
+          unmountChildren(c1);
+        }
+        if (c1 !== c2) {
+          hostSetElementText(el, c2);
+        }
+      } else {
+        if (prevShapeFlag & 16 /* ARRAY_CHILDREN */) {
+          if (shapeFlag & 16 /* ARRAY_CHILDREN */) {
+          } else {
+            unmountChildren(c1);
+          }
+        } else {
+          if (prevShapeFlag & 8 /* TEXT_CHILDREN */) {
+            hostSetElementText(el, "");
+          }
+          if (shapeFlag & 16 /* ARRAY_CHILDREN */) {
+            mountChildren(c2, el);
+          }
+        }
+      }
     };
     const patchElement = (n1, n2) => {
       const el = n2.el = n1.el;

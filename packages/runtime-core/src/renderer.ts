@@ -1,6 +1,6 @@
 import { isNumber, isString, ShapeFlags } from "@vue/shared";
 import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
-import { ConvertibleVNode, createVnode, isSameVnode, Text, VNode } from "./vnode"
+import { ConvertibleVNode, createVnode, isSameVnode, Text, VNode, VNodeChildren } from "./vnode"
 
 /* export type RenderOptions = {
   insert(child: Node, parent: Element, anchor?: Node): void;
@@ -51,20 +51,22 @@ export function createRenderer(renderOptions: RenderOptions) {
     patchProp: hostPatchProp,
   } = renderOptions
 
-  //把数字或字符串转成VNode;
-  const normalize = (child: ConvertibleVNode): VNode => {
+  //把数字或字符串转成VNode,影响到原子节点数组;
+  const normalize = (child: ConvertibleVNode[], index: number): VNode => {
     //是字符串时;
-    if (isString(child)) {
-      return createVnode(Text, null, child as string)
+    if (isString(child[index])) {
+      const vnode = createVnode(Text, null, child[index] as string)
+      child[index] = vnode
     }
 
     //是数字时;
-    if (isNumber(child)) {
-      return createVnode(Text, null, String(child))
+    if (isNumber(child[index])) {
+      const vnode = createVnode(Text, null, String(child[index] as number))
+      child[index] = vnode
     }
 
     //为虚拟节点时;
-    return (child as VNode)
+    return (child[index] as VNode)
   }
 
   /* //挂载子节点列表到容器上;
@@ -72,7 +74,7 @@ export function createRenderer(renderOptions: RenderOptions) {
   const mountChildren = (children: Array<ConvertibleVNode>, container: HTMLElement) => {
     for (let index = 0; index < children?.length; index++) {
       //debugger
-      const child = normalize(children[index])
+      const child = normalize(children, index)//处理后要进行替换,否则children中存放的依旧是字符串;
       patch(null, child, container)
     }
   }
@@ -144,6 +146,13 @@ export function createRenderer(renderOptions: RenderOptions) {
     }
   }
 
+  const unmountChildren = (children: ConvertibleVNode[]) => {
+    for (let index = 0; index < children.length; index++) {
+      //debugger
+      unmount(children[index])
+    }
+  }
+
   //比较两个虚拟节点的子节点的差异,el就是当前两个虚拟节点对应的真实DOM元素;
   const patchChildren = (n1: RenderVNode, n2: RenderVNode, el: HTMLElement) => {
     //debugger
@@ -151,10 +160,79 @@ export function createRenderer(renderOptions: RenderOptions) {
     const c1 = n1?.children || null//旧虚拟节点的子节点列表;
     const c2 = n2?.children || null//新虚拟节点的子节点列表;
 
+    const prevShapeFlag = n1.shapeFlag;//之前的虚拟节点的类型;
+    const shapeFlag = n2.shapeFlag;//之后的虚拟节点的类型;
+
     //子节点列表可能是: 文本, 空的null, 数组;
 
     //比较两个子节点列表的差异;
-    
+
+
+    //新儿子	旧儿子	操作方式;
+    //新的  老的;
+    //文本	数组	（删除老儿子，设置文本内容）;
+    //文本	文本	（更新文本即可）;
+    //数组	数组	（diff算法）;
+    //数组	文本	（清空文本，进行挂载）;
+    //空	数组	（删除所有儿子）;
+    //空	文本	（清空文本）;
+
+    //旧儿子为空时,processElement()里不调用patchElement(),同时patchChildren()是在patchElement()里的,走不到这个方法;
+    //文本	空	（更新文本即可);
+    //数组	空	（进行挂载）;
+    //空	空	（无需处理）;
+
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {//判断新虚拟节点为文本;
+      //新的是文本,老的是数组时;
+
+      //两种情况:
+      //文本	数组	（删除老儿子，设置文本内容）;
+      //文本	文本	（更新文本即可）;//更新文本相当于设置文本内容;
+
+      //这里的思路是如果老节点是数组,那么就先删除老节点;
+      //之后不管老节点的类型,只要新老节点的子节点不相等,统一设置文本内容;
+
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {//判断老节点为数组;
+        //删除所有子节点;
+        unmountChildren(c1 as ConvertibleVNode[])//文本	数组	（删除老儿子，设置文本内容）;
+      }
+
+      //老的是文本时;子节点内容不一致,就把文本丢到元素上;//如果老的是数组,那么c1也必定不等于c2;
+      if (c1 !== c2) {
+        hostSetElementText(el, c2 as string)//文本	文本	（更新文本即可）;包括了文本和空;
+      }
+
+    } else {
+      //目前新虚拟节点为数组或者为空;
+
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) { //判断老虚拟节点为数组;
+
+        //判断新虚拟节点为数组;
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {//数组	数组	（diff算法）;
+          //diff算法;
+        } else {
+          //现在新虚拟节点不是数组,就代表新虚拟节点为空? (文本和空 删除以前的);
+          unmountChildren(c1 as ConvertibleVNode[])//空	数组	（删除所有儿子）;
+        }
+      } else {
+        //两种情况;
+        //空	文本	（清空文本）;
+        //数组	文本	（清空文本，进行挂载）;
+
+        //这里的思路是如果老节点为文本,那么不管当前新节点为数组还是空,都直接清空当前文本;
+        //如果当前新节点为数组,那么就挂载新节点的子节点;
+
+        if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {//判断老虚拟节点为文本;//此时新虚拟节点为数组或者为空;
+          hostSetElementText(el, '')//数组	文本	（清空文本，进行挂载）;//（清空文本，进行挂载）---中的`清空文本`这一步;
+        }//空	文本	（清空文本）;//这里把空字符串看成清空当前DOM元素上的文本节点也行;
+
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {//判断新虚拟节点为数组;
+          mountChildren(c2 as ConvertibleVNode[], el)//数组	文本	（清空文本，进行挂载）;//（清空文本，进行挂载）---中的`进行挂载`这一步;
+        }
+
+      }
+    }
+
   }
 
   //用于进行虚拟节点为HTML元素的比对;
