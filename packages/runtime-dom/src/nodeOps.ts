@@ -1,4 +1,16 @@
-export const nodeOps = {
+
+export type NodeOperateOptions = {
+  insert(child: Node, parent: Element, anchor?: Node): void;
+  remove(child: Node): void;
+  setElementText(el: Element, text: string): void;
+  setText(node: Node, text: string): void;
+  querySelector(selector: any): any;
+  parentNode(node: Node): ParentNode;
+  nextSibling(node: Node): ChildNode;
+  createElement(tagName: string): HTMLElement;
+  createText(text: string): Text;
+}
+export const nodeOps: NodeOperateOptions = {
   //增加 删除 修改 查询
 
   //插入节点;

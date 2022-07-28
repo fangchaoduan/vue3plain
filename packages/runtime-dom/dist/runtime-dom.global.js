@@ -24,6 +24,7 @@ var VueRuntimeDOM = (() => {
     createRenderer: () => createRenderer,
     createVnode: () => createVnode,
     h: () => h,
+    isSameVnode: () => isSameVnode,
     isVnode: () => isVnode,
     render: () => render
   });
@@ -44,6 +45,9 @@ var VueRuntimeDOM = (() => {
   var Text = Symbol("Text");
   function isVnode(value) {
     return !!(value == null ? void 0 : value.__v_isVnode);
+  }
+  function isSameVnode(n1, n2) {
+    return n1.type === n2.type && n1.key === n2.key;
   }
   function createVnode(type, props, children = null) {
     let shapeFlag = isString(type) ? 1 /* ELEMENT */ : 0;
@@ -118,25 +122,59 @@ var VueRuntimeDOM = (() => {
       if (n1 === null) {
         n2.el = hostCreateText(n2.children);
         hostInsert(n2.el, container);
+      } else {
+        const el = n2.el = n1.el;
+        if (n1.children !== n2.children) {
+          hostSetText(el, n2.children);
+        }
+      }
+    };
+    const patchProps = (oldProps, newProps, el) => {
+      for (const key in newProps) {
+        hostPatchProp(el, key, oldProps[key], newProps[key]);
+      }
+      for (const key in oldProps) {
+        if (newProps[key] === null || newProps[key] === void 0) {
+          hostPatchProp(el, key, oldProps[key], null);
+        }
+      }
+    };
+    const patchChildren = (n1, n2, el) => {
+      const c1 = (n1 == null ? void 0 : n1.children) || null;
+      const c2 = (n2 == null ? void 0 : n2.children) || null;
+    };
+    const patchElement = (n1, n2) => {
+      const el = n2.el = n1.el;
+      const oldProps = n1.props || {};
+      const newProps = n2.props || {};
+      patchProps(oldProps, newProps, el);
+      patchChildren(n1, n2, el);
+    };
+    const processElement = (n1, n2, container) => {
+      if (n1 === null) {
+        mountElement(n2, container);
+      } else {
+        patchElement(n1, n2);
       }
     };
     const patch = (n1, n2, container) => {
       if (n1 === n2) {
         return;
       }
+      if (n1 && !isSameVnode(n1, n2)) {
+        unmount(n1);
+        n1 = null;
+      }
       const { type, shapeFlag } = n2;
-      if (n1 === null) {
-        switch (type) {
-          case Text:
-            processText(n1, n2, container);
-            break;
-          default:
-            if (shapeFlag & 1 /* ELEMENT */) {
-              mountElement(n2, container);
-            }
-            break;
-        }
-      } else {
+      switch (type) {
+        case Text:
+          processText(n1, n2, container);
+          break;
+        default:
+          if (shapeFlag & 1 /* ELEMENT */) {
+            processElement(n1, n2, container);
+          }
+          break;
       }
     };
     const unmount = (vnode) => {
@@ -276,7 +314,8 @@ var VueRuntimeDOM = (() => {
       return;
     }
     for (const key in prevValue) {
-      if (nextValue[key] === void 0 && nextValue[key] === null) {
+      console.log("nextValue[key]--->", nextValue[key]);
+      if (!(nextValue[key] === void 0 || nextValue[key] === null)) {
         continue;
       }
       el.style[key] = null;

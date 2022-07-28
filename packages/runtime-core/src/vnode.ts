@@ -10,9 +10,22 @@ export function isVnode(value) {
   return !!value?.__v_isVnode
 }
 
+//判断两个虚拟节点是否是相同节点;
+//思路是: 1) 标签名相同; 2) key是一样的;
+export function isSameVnode(n1: VNode, n2: VNode) {
+  return (n1.type === n2.type) && (n1.key === n2.key)
+}
+
+//虚拟节点的type类型;
 export type VNodeType = string | Symbol
+
+//虚拟节点的props类型;
 export declare type VNodeProps = object | undefined | null
-export type VNodeChildren = undefined | null | number | string | VNode | Array<string | VNode | number>
+
+//虚拟节点的children类型;
+export type VNodeChildren = undefined | null | ConvertibleVNode | Array<ConvertibleVNode>
+
+//虚拟节点类型,可以认为它不包含null与undefined;
 export type VNode = {
   type: VNodeType;
   props: VNodeProps;
@@ -22,6 +35,10 @@ export type VNode = {
   __v_isVnode: boolean;
   shapeFlag: number;
 }
+
+//可转化为虚拟节点的类型;
+export type ConvertibleVNode = string | VNode | number
+
 //虚拟节点有很多:组件的,元素的,文本的等; //h('h1);
 export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeChildren = null): VNode {
   //组合方案 shapeFlag;
@@ -53,12 +70,3 @@ export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeC
   return vnode
 
 }
-//9 8+1;
-//17 16+1;
-/* <div>
-  <h1></h1>
-  <h1></h1>
-</div>
-<div>
-  123
-</div> */

@@ -15,7 +15,8 @@ export function patchStyle(el: HTMLElement, prevValue: object | null, nextValue:
     return
   }
   for (const key in prevValue) {
-    if (nextValue[key] === undefined && nextValue[key] === null) {
+    console.log('nextValue[key]--->', nextValue[key])
+    if (!(nextValue[key] === undefined || nextValue[key] === null)) {
       continue
     }
     el.style[key] = null
