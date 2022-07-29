@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试运行时runtime-dom</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+</body>
+<!-- <script src="../../../node_modules/vue/dist//vue.global.js"></script> -->
+
+<!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script> -->
+<!-- vue内部的运行时模块; -->
+
+<!-- <script src="../../../node_modules/@vue/runtime-core/dist//runtime-core.global.js"></script> -->
+<!-- 最终`runtime-dom.global.js`还是提供到core中;不过node_modules并没有单独打包; -->
+
+<script src="./runtime-dom.global.js"></script>
+<!-- 自己的运行时模块; -->
+
+<script>
+  /* //const { createRenderer, h, render } = VueRuntimeDOM//VueRuntimeDOM是通过点击并跳转到`../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js`看到的;
+  //参见:[createRenderer用法](https://v3.cn.vuejs.org/api/global-api.html#createrenderer);//createRenderer返回一个Renderer渲染器对象;
+  //参见:[h函数](https://v3.cn.vuejs.org/api/global-api.html#h);//h函数返回一个虚拟节点;
+
+  //渲染函数渲染的是虚拟DOM;
+
+  //createRenderer要传一个对象,对象上的属性为用于创建DOM节点的方法,返回一个Renderer渲染器对象;
+  //`渲染器`就是让用户自己提供`操作DOM元素用到的一系列api`;
+  //之后在调用`渲染器.render()`时,调用用户传入的方法将`渲染器.render()的第一个虚拟节点参数`渲染到`渲染器.render()的第二个DOM节点`上;
+  //实际上[mpvue](https://github.com/Meituan-Dianping/mpvue)的原理也差不多;
+  const renderer = createRenderer({
+    // createElement(element) {
+    //   //小程序setData();
+    //   return document.createElement(element);
+    // },
+    // setElementText(el, text) {
+    //   el.innerHTML = text
+    // },
+    // insert(el, container) {
+    //   container.appendChild(el)
+    // },
+    // patchProp(el, key, prevValue, nextValue) {
+    //   console.log('el,key,nextValue--->', el, key, nextValue)
+    // }
+  })
+
+  //createElement;
+  renderer.render(h('h1', { style: { color: 'red' } }, 'hello'), app) */
+
+  /* 
+  //const { createRenderer, h, render } = VueRuntimeDOM
+  //render(h('h1', { style: { color: 'red' } }, 'hello'), app)
+
+  //h()用于创建一个虚拟DOM;
+  //render()用于把虚拟DOM渲染到元素上;
+  //h()与render()都不依赖于平台,所以在runtime-core中; */
+
+  /* const { createRenderer, h, render } = VueRuntimeDOM
+  console.log('createRenderer, h, render--->', createRenderer, h, render)
+  //runtime-dom本质上什么也没有做,只是内部封装了一些平台对应的代码;
+  //而`runtime-dom`封装好之后,就调用内部的createRenderer(),创建渲染器用于后面渲染;
+
+  //具体渲染在`runtime-core`中定义,用`runtime-dom封装好的方法`来把`虚拟DOM`创建成`真实DOM`;
+  //而`createRenderer()`及`createRenderer().render()`;
+
+  //h()方法是给用户来用的,具备多样性;
+  //如: h('h1','hello'),h('h1', { style: { color: 'red' } }, 'hello'),h('h1', 'hello'),h('h1', [h('span')]);
+  //所以最好一个底层方法,包装出来h(),让h()支持各种各样的场景;
+  render(h('h1', { style: { color: 'red' } }, 'hello'), app) */
+
+
+  /* const { createRenderer, h, render } = VueRuntimeDOM
+  const theVNode = h('div','123');
+  console.log('theVNode--->',theVNode)
+  render(theVNode, app) */
+
+  /* //h('h1',{},[]);
+  //h('h1',null,'文本')
+  const { createRenderer, h, render } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' }, onClick: () => { console.log('点击了;') } }, [h('span', '文本'),h('span', '文本二')]), app) */
+
+
+  /* const { createRenderer, h, render } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' }, onClick: () => { console.log('点击了;') } }, '文本'), app) */
+
+  /* const { createRenderer, h, render } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' }, onClick: () => { console.log('点击了;') } }, [h('span', '文本'),'文本二']), app) */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h(Text, '文本'), app) */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' }, onClick: () => { console.log('点击了;') } }, [h('span', '文本'), '文本二']), app) */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' }, onClick: () => { console.log('点击了;') } }, [h('span', '文本'), '文本二']), app)
+  setTimeout(() => {
+    //debugger
+    render(h(Text, '新文本'), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h(Text,'旧文本'), app)
+  setTimeout(() => {
+    //debugger
+    render(h(Text, '新文本'), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } }, '文本'), app)
+  }, 1000); */
+
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } }, [h(Text,'999'),'文本',h(Text,'111')]), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本一'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } }, '文本二'), app)
+  }, 1000); */
+
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本一'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } }), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '文本一'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } },h('span','span中的文本')), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, ['文本一','文本2']), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } },'123'), app)
+  }, 1000); */
+
+  /* const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '123'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } },['文本一','文本2']), app)
+  }, 1000); */
+
+  const { createRenderer, h, render, Text } = VueRuntimeDOM
+  render(h('h1', { style: { color: 'red' } }, '123'), app)
+  setTimeout(() => {
+    render(h('h1', { style: { color: 'blue', background: 'red' } },['文本一','文本2']), app)
+  }, 1000);
+</script>
+
+</html>

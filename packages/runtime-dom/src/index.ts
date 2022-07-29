@@ -6,7 +6,7 @@ import { patchProp } from "./patchProp";
 
 
 const renderOptions: RenderOptions = Object.assign(nodeOps, { patchProp })//domAPI 属性api;
-console.log('renderOptions--->', renderOptions)
+//console.log('renderOptions--->', renderOptions)
 
 
 
