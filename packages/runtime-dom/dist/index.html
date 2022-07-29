@@ -17,120 +17,17 @@
   <!-- 自己的运行时模块; -->
 
   <script>
-    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", { style: { color: "red" } }, [
-        h("li", {}, "文本1"),
-        h("li", {}, "文本2"),
-        h("li", {}, "文本3"),
-      ]),
-      app
-    );
-
-    setTimeout(() => {
-      render(
-        h("h1", { style: { color: "blue", background: "red" } }, [
-          h("li", {}, "文本1"),
-          h("li", {}, "文本2"),
-          h("li", {}, "文本3"),
-        ]),
-        app
-      );
-    }, 1000); */
-
-    /* //从前面比:
+    /* //乱序比对:
     const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", { style: { color: "red" } }, [
-        h("li", {key:'a'}, "a"),
-        h("li", {key:'b'}, "b"),
-        h("li", {key:'c'}, "c"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", { style: { color: "blue", background: "red" } }, [
-          h("li", {key:'a'}, "a"),
-          h("li", {key:'b'}, "b"),
-          h("li", {key:'d'}, "d"),
-          h("li", {key:'e'}, "e"),
-        ]),
-        app
-      );
-    }, 1000); */
-
-    /* //从后面比:
-    const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", { style: { color: "red" } }, [
-        h("li", {key:'a'}, "a"),
-        h("li", {key:'b'}, "b"),
-        h("li", {key:'c'}, "c"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", { style: { color: "blue", background: "red" } }, [
-          h("li", {key:'d'}, "d"),
-          h("li", {key:'e'}, "e"),
-          h("li", {key:'b'}, "b"),
-          h("li", {key:'c'}, "c"),
-        ]),
-        app
-      );
-    }, 1000); */
-
-    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", { style: { color: "red" } }, [
-        h("li", { key: "a", style: { color: "yellow" } }, "a"),
-        h("li", { key: "b" }, "b"),
-        h("li", { key: "c" }, "c"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", { style: { color: "blue", background: "red" } }, [
-          h("li", { key: "a" }, "a"),
-          h("li", { key: "b" }, "b"),
-          h("li", { key: "c" }, "c"),
-          h("li", { key: "d" }, "d"),
-        ]),
-        app
-      );
-    }, 1000); */
-
-    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
     render(
       h("h1", { style: { color: "red" } }, [
         h("li", { key: "a" }, "a"),
         h("li", { key: "b" }, "b"),
         h("li", { key: "c" }, "c"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", { style: { color: "blue", background: "red" } }, [
-          h("li", { key: "d" }, "d"),
-          h("li", { key: "a" }, "a"),
-          h("li", { key: "b" }, "b"),
-          h("li", { key: "c" }, "c"),
-        ]),
-        app
-      );
-    }, 1000); */
-
-    const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", { style: { color: "red" } }, [
         h("li", { key: "d" }, "d"),
-        h("li", { key: "a" }, "a"),
-        h("li", { key: "b" }, "b"),
-        h("li", { key: "c" }, "c"),
+        h("li", { key: "e" }, "e"),
+        h("li", { key: "f" }, "f"),
+        h("li", { key: "g" }, "g"),
       ]),
       app
     );
@@ -139,7 +36,131 @@
         h("h1", { style: { color: "blue", background: "red" } }, [
           h("li", { key: "a" }, "a"),
           h("li", { key: "b" }, "b"),
+          h("li", { key: "e" }, "e"),
           h("li", { key: "c" }, "c"),
+          h("li", { key: "d" }, "d"),
+          h("li", { key: "h" }, "h"),
+          h("li", { key: "f" }, "f"),
+          h("li", { key: "g" }, "g"),
+        ]),
+        app
+      );
+    }, 1000); */
+
+    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
+    render(
+      h("h1", { style: { color: "red" } }, [
+        h("li", { key: "a" }, "a"),
+        h("li", { key: "b" }, "b"),
+        h("li", { key: "c" }, "c"),
+        h("li", { key: "d" }, "d"),
+        h("li", { key: "gg", style: { color: "red" } }, "gg"),
+        h("li", { key: "e" }, "e"),
+        h("li", { key: "f" }, "f"),
+        h("li", { key: "g" }, "g"),
+      ]),
+      app
+    );
+    setTimeout(() => {
+      render(
+        h("h1", { style: { color: "blue", background: "red" } }, [
+          h("li", { key: "a" }, "a"),
+          h("li", { key: "b" }, "b"),
+          h("li", { key: "e" }, "e"),
+          h("li", { key: "c" }, "c"),
+          h("li", { key: "d" }, "d"),
+          h("li", { key: "h" }, "h"),
+          h("li", { key: "f" }, "f"),
+          h("li", { key: "g" }, "g"),
+        ]),
+        app
+      );
+    }, 1000); */
+
+    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
+    render(
+      h("h1", { style: { color: "red" } }, [
+        h("li", { key: "a" }, "a"),
+        h("li", { key: "b" }, "b"),
+        h("li", { key: "c" }, "c"),
+        h("li", { key: "d" }, "d"),
+        h("li", { key: "gg", style: { color: "red" } }, "gg"),
+        h("li", { key: "e", style: { color: "red" } }, "e"),
+        h("li", { key: "f" }, "f"),
+        h("li", { key: "g" }, "g"),
+      ]),
+      app
+    );
+    setTimeout(() => {
+      render(
+        h("h1", {}, [
+          h("li", { key: "a" }, "a"),
+          h("li", { key: "b" }, "b"),
+          h("li", { key: "e" }, "e"),
+          h("li", { key: "c" }, "c"),
+          h("li", { key: "d" }, "d"),
+          h("li", { key: "h" }, "h"),
+          h("li", { key: "f" }, "f"),
+          h("li", { key: "g" }, "g"),
+        ]),
+        app
+      );
+    }, 1000); */
+
+    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
+    render(
+      h("h1", {  }, [
+        h("li", { key: "a" }, "a"),
+        h("li", { key: "b" }, "b"),
+        h("li", { key: "c" }, "c"),
+        h("li", { key: "d" }, "d"),
+        h("li", { key: "gg", style: { color: "red" } }, "gg"),
+        h("li", { key: "e", style: { color: "red" } }, "e"),
+        h("li", { key: "f" }, "f"),
+        h("li", { key: "g" }, "g"),
+      ]),
+      app
+    );
+    setTimeout(() => {
+      render(
+        h("h1", {}, [
+          h("li", { key: "a" }, "a"),
+          h("li", { key: "b" }, "b"),
+          h("li", { key: "e" }, "e"),
+          h("li", { key: "c" }, "c"),
+          h("li", { key: "d" }, "d"),
+          h("li", { key: "h" }, "h"),
+          h("li", { key: "f" }, "f"),
+          h("li", { key: "g" }, "g"),
+        ]),
+        app
+      );
+    }, 1000); */
+
+    const { createRenderer, h, render, Text } = VueRuntimeDOM;
+    render(
+      h("h1", {  }, [
+        h("li", { key: "a" }, "a"),
+        h("li", { key: "b" }, "b"),
+        h("li", { key: "c" }, "c"),
+        h("li", { key: "d" }, "d"),
+        h("li", { key: "e", style: { color: "red" } }, "e"),
+        h("li", { key: "f" }, "f"),
+        h("li", { key: "g" }, "g"),
+      ]),
+      app
+    );
+    setTimeout(() => {
+      render(
+        h("h1", {}, [
+          h("li", { key: "a" }, "a"),
+          h("li", { key: "b" }, "b"),
+          h("li", { key: "e" }, "e"),
+          h("li", { key: "c" }, "c"),
+          h("li", { key: "d" }, "d"),
+          h("li", { key: "h" }, "h"),
+          h("li", { key: "f" }, "f"),
+          h("li", { key: "g" }, "g"),
         ]),
         app
       );

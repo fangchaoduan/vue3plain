@@ -183,6 +183,35 @@ var VueRuntimeDOM = (() => {
           }
         }
       }
+      let s1 = i;
+      let s2 = i;
+      const keyToNewIndexMap = /* @__PURE__ */ new Map();
+      for (let index = s2; index <= e2; index++) {
+        keyToNewIndexMap.set(c2[index].key, index);
+      }
+      const toBePatched = e2 - s2 + 1;
+      const newIndexToOldIndexMap = new Array(toBePatched).fill(0);
+      for (let index = s1; index <= e1; index++) {
+        const oldChild = c1[index];
+        const newIndex = keyToNewIndexMap.get(oldChild.key);
+        if (newIndex === void 0) {
+          unmount(oldChild);
+        } else {
+          newIndexToOldIndexMap[newIndex - s2] = index + 1;
+          patch(oldChild, c2[newIndex], el);
+        }
+      }
+      console.log("newIndexToOldIndexMap--->", JSON.parse(JSON.stringify(newIndexToOldIndexMap)));
+      for (let theIndex = toBePatched - 1; theIndex >= 0; theIndex--) {
+        const index = theIndex + s2;
+        const current = c2[index];
+        const anchor = index + 1 < c2.length ? c2[index + 1].el : null;
+        if (newIndexToOldIndexMap[theIndex] === 0) {
+          patch(null, current, el, anchor);
+        } else {
+          hostInsert(current.el, el, anchor);
+        }
+      }
     };
     const patchChildren = (n1, n2, el) => {
       const c1 = (n1 == null ? void 0 : n1.children) || null;
