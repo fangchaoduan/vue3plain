@@ -41,6 +41,45 @@ var VueRuntimeDOM = (() => {
   };
   var isArray = Array.isArray;
 
+  // packages/runtime-core/src/sequence.ts
+  function getSequence(arr) {
+    const len = arr.length;
+    const result = [0];
+    const p = new Array(len).fill(0);
+    let resultLastIndex;
+    for (let i = 0; i < len; i++) {
+      const arrI = arr[i];
+      if (arrI === 0) {
+        continue;
+      }
+      resultLastIndex = result[result.length - 1];
+      if (arr[resultLastIndex] < arrI) {
+        result.push(i);
+        p[i] = resultLastIndex;
+        continue;
+      }
+      let start = 0;
+      let end = result.length - 1;
+      let middle;
+      for (; start < end; ) {
+        middle = (start + end) / 2 | 0;
+        if (arr[result[middle]] < arrI) {
+          start = middle + 1;
+        } else {
+          end = middle;
+        }
+      }
+      if (arr[result[end]] > arrI) {
+        result[end] = i;
+        p[i] = result[end - 1];
+      }
+    }
+    for (let i = result.length - 1, last = result[i]; i >= 0; last = p[last], i--) {
+      result[i] = last;
+    }
+    return result;
+  }
+
   // packages/runtime-core/src/vnode.ts
   var Text = Symbol("Text");
   function isVnode(value) {
@@ -202,6 +241,8 @@ var VueRuntimeDOM = (() => {
         }
       }
       console.log("newIndexToOldIndexMap--->", JSON.parse(JSON.stringify(newIndexToOldIndexMap)));
+      const increment = getSequence(newIndexToOldIndexMap);
+      let j = increment.length - 1;
       for (let theIndex = toBePatched - 1; theIndex >= 0; theIndex--) {
         const index = theIndex + s2;
         const current = c2[index];
@@ -209,7 +250,12 @@ var VueRuntimeDOM = (() => {
         if (newIndexToOldIndexMap[theIndex] === 0) {
           patch(null, current, el, anchor);
         } else {
-          hostInsert(current.el, el, anchor);
+          if (theIndex !== increment[j]) {
+            hostInsert(current.el, el, anchor);
+          } else {
+            console.log("\u8FD9\u91CC\u4E0D\u505A\u63D2\u5165\u4E86;");
+            j--;
+          }
         }
       }
     };

@@ -1,5 +1,6 @@
 import { isNumber, isString, ShapeFlags } from "@vue/shared";
 import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
+import { getSequence } from "./sequence";
 import { ConvertibleVNode, createVnode, isSameVnode, Text, VNode, VNodeChildren } from "./vnode"
 
 
@@ -223,6 +224,9 @@ export function createRenderer(renderOptions: RenderOptions) {
     //循环老的元素 看一下新的里面有没有,如果有说明要比较差异,没有要添加到列表中,老的有新的没有要删除;
     const toBePatched = e2 - s2 + 1;//新的总个数;
     const newIndexToOldIndexMap: number[] = new Array(toBePatched).fill(0)//一个记录是否比对过的映射表;//新节点总个数中顺序对应着老虚拟节点的角标;
+
+
+
     for (let index = s1; index <= e1; index++) {
       const oldChild = c1[index];//老的孩子;
       const newIndex = keyToNewIndexMap.get(oldChild.key)//用老的孩子去新的里面找;
@@ -237,9 +241,15 @@ export function createRenderer(renderOptions: RenderOptions) {
     //到这只是新老属性和儿子的比对,没有移动位置;//也没有新增过新节点中多余出来的节点;
     console.log('newIndexToOldIndexMap--->', JSON.parse(JSON.stringify(newIndexToOldIndexMap)))
 
+
+    //获取最长递增子序列;
+    const increment = getSequence(newIndexToOldIndexMap)
+
     //需要移动位置;
     //目前无论如何都做了一遍倒叙进行插入或创建;
-    for (let theIndex = toBePatched - 1; theIndex >= 0; theIndex--) {
+    let j = increment.length - 1
+    //console.log('increment--->', increment)
+    for (let theIndex = toBePatched - 1; theIndex >= 0; theIndex--) {//[3,2,1,0];
       const index = theIndex + s2
       const current = c2[index];//找到当前节点;(最后没做过处理的要新增的元素);
       const anchor = index + 1 < c2.length ? c2[index + 1].el : null
@@ -254,11 +264,19 @@ export function createRenderer(renderOptions: RenderOptions) {
       } else {
         //不是0,说明是已经比对过属性和儿子的了;
 
+        //console.log(theIndex,increment,j,increment[j])
+        if (theIndex !== increment[j]) {
+          hostInsert(current.el, el, anchor)
+        } else {
+          console.log('这里不做插入了;')
+          j-- //如果i===increment[theIndex],则说明这个节点不用动;同时j要减一,用于下次比较;
+        }
+
         //插入;//复用了节点;//不过这些节点也已经在标识时patch过了;
         //目前无论如何都做了一遍倒叙插入,其实可以不用全部都插入一遍;
         //可以根据刚才的数组来减少插入次数;
         //可以用最长递增子序列来实现,处于最长递增子序列中的数据,可以不用插入;只需要改变不是处于最长递增子序列中的元素就可以了;
-        hostInsert(current.el, el, anchor)
+        //hostInsert(current.el, el, anchor)
       }
 
       //这里发现缺失逻辑,需要看一下current有没有el,如果没有el说明是新增的逻辑;
