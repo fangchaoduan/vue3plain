@@ -248,6 +248,9 @@ export function createRenderer(renderOptions: RenderOptions) {
         //之前的表类似于[5,3,4,0];//值为0,说明没patch过,就说明要创建;
         patch(null, current, el, anchor)//创建新节点;
 
+        //newIndexToOldIndexMap一般为[5,3,4,0]例如: 
+        //[5,3,4,0] -> 对应角标theIndex[0,1,2,3] -> 最长递增角标[1,2] -> 对应递增值[3,4] -> 要改的值为[5]与[0] -> 要改的值对应角标theIndex为[0]与[3],其中[0]为插入以改变排序,[3]为新增并插入;
+
       } else {
         //不是0,说明是已经比对过属性和儿子的了;
 
