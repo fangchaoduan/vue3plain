@@ -17,153 +17,21 @@
   <!-- 自己的运行时模块; -->
 
   <script>
-    /* //乱序比对:
+    /* //插入一个文本:
     const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", { style: { color: "red" } }, [
-        h("li", { key: "a" }, "a"),
-        h("li", { key: "b" }, "b"),
-        h("li", { key: "c" }, "c"),
-        h("li", { key: "d" }, "d"),
-        h("li", { key: "e" }, "e"),
-        h("li", { key: "f" }, "f"),
-        h("li", { key: "g" }, "g"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", { style: { color: "blue", background: "red" } }, [
-          h("li", { key: "a" }, "a"),
-          h("li", { key: "b" }, "b"),
-          h("li", { key: "e" }, "e"),
-          h("li", { key: "c" }, "c"),
-          h("li", { key: "d" }, "d"),
-          h("li", { key: "h" }, "h"),
-          h("li", { key: "f" }, "f"),
-          h("li", { key: "g" }, "g"),
-        ]),
-        app
-      );
-    }, 1000); */
+    render(h(Text, "hello"), app); */
 
-    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", { style: { color: "red" } }, [
-        h("li", { key: "a" }, "a"),
-        h("li", { key: "b" }, "b"),
-        h("li", { key: "c" }, "c"),
-        h("li", { key: "d" }, "d"),
-        h("li", { key: "gg", style: { color: "red" } }, "gg"),
-        h("li", { key: "e" }, "e"),
-        h("li", { key: "f" }, "f"),
-        h("li", { key: "g" }, "g"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", { style: { color: "blue", background: "red" } }, [
-          h("li", { key: "a" }, "a"),
-          h("li", { key: "b" }, "b"),
-          h("li", { key: "e" }, "e"),
-          h("li", { key: "c" }, "c"),
-          h("li", { key: "d" }, "d"),
-          h("li", { key: "h" }, "h"),
-          h("li", { key: "f" }, "f"),
-          h("li", { key: "g" }, "g"),
-        ]),
-        app
-      );
-    }, 1000); */
-
-    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", { style: { color: "red" } }, [
-        h("li", { key: "a" }, "a"),
-        h("li", { key: "b" }, "b"),
-        h("li", { key: "c" }, "c"),
-        h("li", { key: "d" }, "d"),
-        h("li", { key: "gg", style: { color: "red" } }, "gg"),
-        h("li", { key: "e", style: { color: "red" } }, "e"),
-        h("li", { key: "f" }, "f"),
-        h("li", { key: "g" }, "g"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", {}, [
-          h("li", { key: "a" }, "a"),
-          h("li", { key: "b" }, "b"),
-          h("li", { key: "e" }, "e"),
-          h("li", { key: "c" }, "c"),
-          h("li", { key: "d" }, "d"),
-          h("li", { key: "h" }, "h"),
-          h("li", { key: "f" }, "f"),
-          h("li", { key: "g" }, "g"),
-        ]),
-        app
-      );
-    }, 1000); */
-
-    /* const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", {  }, [
-        h("li", { key: "a" }, "a"),
-        h("li", { key: "b" }, "b"),
-        h("li", { key: "c" }, "c"),
-        h("li", { key: "d" }, "d"),
-        h("li", { key: "gg", style: { color: "red" } }, "gg"),
-        h("li", { key: "e", style: { color: "red" } }, "e"),
-        h("li", { key: "f" }, "f"),
-        h("li", { key: "g" }, "g"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", {}, [
-          h("li", { key: "a" }, "a"),
-          h("li", { key: "b" }, "b"),
-          h("li", { key: "e" }, "e"),
-          h("li", { key: "c" }, "c"),
-          h("li", { key: "d" }, "d"),
-          h("li", { key: "h" }, "h"),
-          h("li", { key: "f" }, "f"),
-          h("li", { key: "g" }, "g"),
-        ]),
-        app
-      );
-    }, 1000); */
-
+    /* //插入两个文本:
     const { createRenderer, h, render, Text } = VueRuntimeDOM;
-    render(
-      h("h1", {  }, [
-        h("li", { key: "a" }, "a"),
-        h("li", { key: "b" }, "b"),
-        h("li", { key: "c" }, "c"),
-        h("li", { key: "d" }, "d"),
-        h("li", { key: "e", style: { color: "red" } }, "e"),
-        h("li", { key: "f" }, "f"),
-        h("li", { key: "g" }, "g"),
-      ]),
-      app
-    );
-    setTimeout(() => {
-      render(
-        h("h1", {}, [
-          h("li", { key: "a" }, "a"),
-          h("li", { key: "b" }, "b"),
-          h("li", { key: "e" }, "e"),
-          h("li", { key: "c" }, "c"),
-          h("li", { key: "d" }, "d"),
-          h("li", { key: "h" }, "h"),
-          h("li", { key: "f" }, "f"),
-          h("li", { key: "g" }, "g"),
-        ]),
-        app
-      );
-    }, 1000);
+    render(h(Text, "hello"),h('h1','world'), app);//会报错,不容器是谁; */
+
+    /* //插入两个文本:
+    const { createRenderer, h, render, Text } = VueRuntimeDOM;
+    render([h(Text, "hello"),h('h1','world')], app);//也不行,render第一个参数要为vnode; */
+
+    //插入两个文本:
+    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    //debugger
+    render(h(Fragment, [h(Text, "hello"), h("h1", "world")]), app);
   </script>
 </html>

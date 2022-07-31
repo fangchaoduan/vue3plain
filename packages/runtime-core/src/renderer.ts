@@ -1,7 +1,7 @@
-import { isNumber, isString, ShapeFlags } from "@vue/shared";
+import { isArray, isNumber, isString, ShapeFlags } from "@vue/shared";
 import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
 import { getSequence } from "./sequence";
-import { ConvertibleVNode, createVnode, isSameVnode, Text, VNode, VNodeChildren } from "./vnode"
+import { ConvertibleVNode, createVnode, Fragment, isSameVnode, Text, VNode, VNodeChildren } from "./vnode"
 
 
 export type RenderOptions = NodeOperateOptions & {
@@ -391,7 +391,18 @@ export function createRenderer(renderOptions: RenderOptions) {
     }
 
   }
-
+  const processFragment = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer) => {
+    if (n1 === null || n1 === undefined) {
+      if (!isArray(n2.children)) {
+        console.log("不是数组,直接退出挂载");
+        return
+      }
+      mountChildren(n2.children, container)//走的是新增,直接把子节点挂载到容器中;
+    } else {
+      //走的是比对,比对新旧虚拟节点的子节点列表;
+      patchChildren(n1, n2, container)//走的是diff算法;
+    }
+  }
   //对比新旧虚拟节点,并创建出`虚拟节点对应真实DOM`,把`虚拟节点对应真实DOM`挂载到虚拟节点上,同时把`虚拟节点对应真实DOM`挂载到容器上;
   const patch = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
     /* //核心的patch方法;
@@ -427,10 +438,13 @@ export function createRenderer(renderOptions: RenderOptions) {
     //虚拟节点类型为组件时比对: 组件属性,插槽;
     const { type, shapeFlag } = n2
     switch (type) {
-      case Text:
+      case Text://文本标签;
         processText(n1, n2, container)
         break;
 
+      case Fragment://无用的标签;
+        processFragment(n1, n2, container)
+        break
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
           processElement(n1, n2, container, anchor)

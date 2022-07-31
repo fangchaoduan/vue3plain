@@ -4,6 +4,7 @@ import { isArray, isString, ShapeFlags } from "@vue/shared";
 
 
 export const Text = Symbol('Text')//用于h()函数内部创建文本的标识;
+export const Fragment = Symbol('Fragment')//用于h()函数内部创建Fragment的标识,表示无用的标签,没什么实际意义的标签;
 
 //判断一个变量是否为虚拟DOM;
 export function isVnode(value) {
