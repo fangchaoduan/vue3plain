@@ -1,6 +1,6 @@
 //type,即节点类型;props,属性;children,子节点;
 
-import { isArray, isString, ShapeFlags } from "@vue/shared";
+import { isArray, isObject, isString, ShapeFlags } from "@vue/shared";
 
 
 export const Text = Symbol('Text')//用于h()函数内部创建文本的标识;
@@ -17,8 +17,14 @@ export function isSameVnode(n1: VNode, n2: VNode) {
   return (n1.type === n2.type) && (n1.key === n2.key)
 }
 
+export type VueComponent = {
+  data?: (() => (object))|object;
+  render?: (() => VNode);
+  [propName: string]: any;//可以定义多余属性;
+}
+
 //虚拟节点的type类型;
-export type VNodeType = string | Symbol
+export type VNodeType = string | Symbol | VueComponent
 
 //虚拟节点的props类型;
 export declare type VNodeProps = object | undefined | null
@@ -45,7 +51,9 @@ export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeC
   //组合方案 shapeFlag;
   //想知道一个元素中包含的是多个儿子还是一个儿子;
   //标识;
-  let shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0;
+  let shapeFlag = isString(type) ?
+    ShapeFlags.ELEMENT :
+    isObject(type) ? ShapeFlags.STATEFUL_COMPONENT : 0;
 
   //虚拟DOM就是一个对象,用于diff算法等的优化;真实DOM的属性比较多;
   const vnode: VNode = {//key;

@@ -9,3 +9,6 @@ export { watch } from './watch'
 //export { ref,toRefs,toRef,proxyRefs } from './ref'
 export * from './ref'
 //添加了ref,toRefs,toRef,proxyRefs;实际上ref就是一个RefImpl类实例,同时也是effect,只是在[get value]时收集依赖,在[set value]时执行当前ref收集的依赖;toRefs用于把响应式数据变成ref对象;toRef把响应式数据的某个属性变成ref对象;把ref对象变成代理对象以减少.value的书写;
+
+export * from './effect'
+//使其在别的地方可以使用通过"@vue/reactivity"使用'./effect.ts'中导出的方法或变量;
