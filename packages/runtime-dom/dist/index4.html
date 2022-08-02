@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>测试运行时runtime-dom</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+  </body>
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script> -->
+  <!-- vue内部的运行时模块; -->
+
+  <script src="./runtime-dom.global.js"></script>
+  <!-- 自己的运行时模块; -->
+
+  <script>
+    /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    //vue2写法定义一个组件;
+    const VueComponent = {
+      data() {
+        return { name: `方`, age: 13 };
+      },
+      //template:``,//模板的写法目前还不用;
+      render() {
+        //render()函数需要返回虚拟节点,最终渲染的就是返回的虚拟节点;
+        //render()类似于effect(),而data()类似于reactive();
+
+        //这个只是演示用,实际开发时,尽量不要这样写;
+        //在render里面,尽量不要操作响应式数据,改变响应式数据的值;
+        //因为每次调用render()时就会触发这个函数,触发之后,因为data()改变,就又重新调用render();
+        setTimeout(() => {
+          this.age++;
+        }, 1000);
+        return h(`p`, `${this.name}今年${this.age}岁了`);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //更新多次;
+    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      data() {
+        return { name: `方`, age: 13 };
+      },
+      render() {
+        //render()函数需要返回虚拟节点,最终渲染的就是返回的虚拟节点;
+        //render()类似于effect(),而data()类似于reactive();
+        setTimeout(() => {
+          this.age++;
+          this.age++;//指数级变动;
+        }, 1000);
+        return h(`p`, `${this.name}今年${this.age}岁了`);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //更新多次;
+    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      data() {
+        return { name: `方`, age: 13 };
+      },
+      render() {
+        setTimeout(() => {
+          this.age++;
+          this.name = this.name + "fang";//指数级变动;
+        }, 1000);
+        return h(`p`, `${this.name}今年${this.age}岁了`);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //更新;
+    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      data() {
+        return { name: `方`, age: 13 };
+      },
+      render() {
+        setTimeout(() => {
+          this.age++;
+        }, 1000);
+        return h(`p`, `${this.name}今年${this.age}岁了`);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    //更新多次;
+    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      data() {
+        return { name: `方`, age: 13 };
+      },
+      render() {
+        setTimeout(() => {
+          this.age++;
+          this.name = this.name + `fang`;
+        }, 1000);
+        return h(`p`, `${this.name}今年${this.age}岁了`);
+      },
+    };
+    render(h(VueComponent), app);
+  </script>
+</html>

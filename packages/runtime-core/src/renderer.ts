@@ -1,10 +1,11 @@
 import { reactive } from "@vue/reactivity";
-import { isArray, isNumber, isString, ShapeFlags } from "@vue/shared";
+import { hasOwn, isArray, isNumber, isString, ShapeFlags } from "@vue/shared";
 import { ReactiveEffect } from "@vue/reactivity";
 import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
 import { getSequence } from "./sequence";
 import { ConvertibleVNode, createVnode, Fragment, isSameVnode, Text, VNode, VNodeChildren, VueComponent } from "./vnode"
 import { queueJob } from "./scheduler";
+import { initProps } from "./componentProps";
 
 
 export type RenderOptions = NodeOperateOptions & {
@@ -15,6 +16,18 @@ type RenderVNode = VNode | null | undefined
 type RenderContainer = HTMLElement & {
   _vnode?: RenderVNode | null | undefined
 };
+
+export type VueInstance = {//组件的实例;
+  state: object;//实例的状态;
+  vnode: VNode;  //vue2的源码中组件的虚拟节点叫$vnode,渲染的内容叫_vnode;//vue3中的虚拟节点就叫vnode;
+  subTree: VNode | null;//vnode:组件的虚拟节点; subTree:渲染的组件内容,即render返回的虚拟节点或模板编译出来的虚拟节点?
+  isMounted: boolean;//组件是否已经挂载了;
+  update: null | Function;//让组件强制进行更新更新的方法;
+  propsOptions: object;//组件上的props属性;//如VueComponent.props即vnode.type.props;//vnode.VueComponent实际上就是用户在h()中传的第二个参数;
+  props: object;//组件的props,即特意声明的props;
+  attrs: object;//组件的attrs,即不声明的属性;
+  proxy: object | null;//代理对象,用来当成组件的render()的this;
+}
 
 export function createRenderer(renderOptions: RenderOptions) {
   const {
@@ -409,25 +422,85 @@ export function createRenderer(renderOptions: RenderOptions) {
     }
   }
 
+  //一些vue中的公开属性方法;
+  const publictPropertyMap = {
+    $attrs: (instance: VueInstance) => instance.attrs
+  }
+
   //把组件挂载到容器上;
   const mountComponent = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
-    const { data = () => ({}), render } = vnode.type as VueComponent;//这个就是用户写的组件内容;
+    const { data = () => ({}), render, props: propsOptions = {} } = vnode.type as VueComponent;//这个就是用户写的组件内容;
+
+    //debugger //propsOptions实际上是VueComponent.props;
+
     const state = reactive((data as Function)() || data);//pinia源码核心就是reactive({}); //作为组件的状态;
 
-    const instance = {//组件的实例;
-      state,//实例的状态;
-      vnode,//vue2的源码中组件的虚拟节点叫$vnode,渲染的内容叫_vnode;//vue3中的虚拟节点就叫vnode;
-      subTree: null,//vnode:组件的虚拟节点; subTree:渲染的组件内容,即render返回的虚拟节点或模板编译出来的虚拟节点?
-      isMounted: false,//组件是否已经挂载了;
-      update: null,//让组件强制进行更新更新的方法;
+    const instance: VueInstance = {//组件的实例;
+      state,
+      vnode,
+      subTree: null,
+      isMounted: false,
+      update: null,
+      propsOptions,
+      props: {},
+      attrs: {},
+      proxy: null
     }
+
+    //instance:实例; vnode.props:用户在h()函数中传的第二个参数;
+    initProps(instance, vnode.props);//给实例赋上props及attrs的值;//vnode.props实际上就是用户在h()中传的第二个参数;
+
+    //debugger
+    //设置代理对象;
+    //实际上在render()中的this指的就是这个,this.props并没有直接改instance.props,而是走到这个代理的set方法中;
+    instance.proxy = new Proxy(instance, {
+      get(target, key) {
+
+        const { state, props } = target
+        if (state && hasOwn(state, key)) {
+          //取data()上的值的流程;
+          return state[key]
+        } else if (props && hasOwn(props, key)) {
+          //取props上的值的流程;
+          return props[key]
+        }
+
+        //取this.$attrs的属性的流程;
+        const getter = publictPropertyMap[key];//this.$attrs;得到一个取值的方法;
+        if (getter) {
+        //console.log('getter(target)--->',getter(target))
+          return getter(target)
+        }
+      },
+      set(target, key, value) {
+
+        const { state, props } = target
+        if (state && hasOwn(state, key)) {
+          //赋值data()上的值的流程;
+          state[key] = value
+          return true
+
+
+        } else if (props && hasOwn(props, key)) {
+          //取props上的值的流程;
+
+          //用户操作的属性是代理对象,在这里面被屏蔽了;
+          //但是可以通过instance.props拿到真实的props并且进行更改;
+          console.warn('禁止修改props上的属性' + (key as string))
+          return false
+        }
+        return true
+      }
+    })
+
+
     //creactApp(组件).mount('app);//vue3要求一切从组件开始;
     const componentUpdateFn = () => {//区分是初始化,还是要更新;
       //console.log('instance--->', instance)
       if (!instance.isMounted) {
         //初始化;
 
-        const subTree: VNode = render.call(state);//得到一个虚拟节点;//作为this,后续this会改;
+        const subTree: VNode = render.call(instance.proxy);//得到一个虚拟节点;//作为this,后续this会改;
         patch(null, subTree, container, anchor)//创造了subTree的真实节点并且插入了容器;
         instance.subTree = subTree//将虚拟节点挂载到实例上;
         instance.isMounted = true
@@ -436,7 +509,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
         //console.log('组件内部更新;')
 
-        const subTree: VNode = render.call(state);//得到一个新的节点;
+        const subTree: VNode = render.call(instance.proxy);//得到一个新的节点;
         patch(instance.subTree, subTree, container, anchor)
         instance.subTree = subTree//将新节点保存到实例上,变成下次更新时的老节点;
       }

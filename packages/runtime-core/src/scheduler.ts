@@ -12,11 +12,12 @@ export function queueJob(job: Function | null) {
       isFlushing = false
 
       const copy = queue.slice(0)//因为在执行时,可能会把一些方法丢进queue中,导致queue数组长度一起变化;
+      queue.length = 0//先清空任务队列,因为在下方的循环中可能会把一些任务也放到queue中,如果是放后面,就会丢失循环时放到queue中的任务;
       for (let i = 0; i < copy.length; i++) {
         const job = copy[i]
         job()
-      }
-      queue.length = 0
+      }                                                     
+      //queue.length = 0
       copy.length = 0
     })
   }

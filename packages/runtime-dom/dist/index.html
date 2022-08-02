@@ -4,104 +4,159 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>测试运行时runtime-dom</title>
+    <title>vue组件runtime-dom</title>
   </head>
 
   <body>
     <div id="app"></div>
   </body>
   <!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script> -->
-  <!-- vue内部的运行时模块; -->
+  <!-- vue内部的运行时模块-开发环境的;组件中this.$attrs是响应式对象; -->
+
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.prod.js"></script> -->
+  <!-- vue内部的运行时模块-生产环境的;组件中this.$attrs不是响应式对象; -->
 
   <script src="./runtime-dom.global.js"></script>
   <!-- 自己的运行时模块; -->
 
   <script>
     /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
-    //vue2写法定义一个组件;
+    //webComponent;
+    //组件的三大特性: 1.属性,属性变化组件如何更新; 2.插槽; 3.事件;
+    //vue3: setup函数(compositionAPI的入口), 组件的生命周期;
     const VueComponent = {
-      data() {
-        return { name: `方`, age: 13 };
+      props: {
+        address: String, //校验属性类型;
       },
-      //template:``,//模板的写法目前还不用;
       render() {
-        //render()函数需要返回虚拟节点,最终渲染的就是返回的虚拟节点;
-        //render()类似于effect(),而data()类似于reactive();
-
-        //这个只是演示用,实际开发时,尽量不要这样写;
-        //在render里面,尽量不要操作响应式数据,改变响应式数据的值;
-        //因为每次调用render()时就会触发这个函数,触发之后,因为data()改变,就又重新调用render();
-        setTimeout(() => {
-          this.age++;
-        }, 1000);
-        return h(`p`, `${this.name}今年${this.age}岁了`);
+        return h("p", [this.address,this.a,this.b]);//可以取到props中的address属性;取不到a与b的属性;
       },
     };
-    render(h(VueComponent), app); */
+    //vue中: props(用户接收的); attrs(用户没有接收的);
+    render(h(VueComponent, { address: "方一二", a: 1, b: 2 }), app); */
 
-    /* //更新多次;
+    /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String, //校验属性类型;
+      },
+      render() {
+        console.log("this--->", this); //看this中的属性;
+        console.log("this.$attrs--->", this.$attrs); //可以看到this.$attrs并不是响应式数据;
+        //this.$attrs.a = 100;//一般不会这样做,这样做会有问题;
+        //this.address = 100;//没能报错,但其实是不让改的,实际上也不会生效;
+        return h("p", [this.address, this.$attrs.a, this.$attrs.b]); //可以用this.$attrs取到a与b的属性;
+      },
+    };
+    //vue中: props(用户接收的); attrs(用户没有接收的);
+    //在组件中在props中写了的属性就是props;没在props中写了的属性就是attrs;
+    //this.$attrs指向attrs;
+    //this.$attrs在开发环境下是代理,类似于响应式数据;在生产环境下是对象,不是响应式数据;
+    render(h(VueComponent, { address: "方一二", a: 1, b: 2 }), app);
+    //组件是单向数据流的,最好不能改变属性; */
+
+    /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String, //校验属性类型;
+        c: {},
+      },
+      render() {
+        //this.c.n = 100; //好像可以生效,但实际上不建议用,要保持单向数据流;
+        setTimeout(() => {
+          console.log('确实执行了')
+          this.c.n = 200;
+        }, 1000);
+        return h("p", [this.address, this.$attrs.a, this.$attrs.b, this.c.n]); //可以用this.$attrs取到a与b的属性;
+      },
+    };
+    render(
+      h(VueComponent, { address: "方一二", a: 1, b: 2, c: { n: 1 } }),
+      app
+    ); */
+
+    /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String, //校验属性类型;
+        c: {},
+      },
+      render() {
+        //debugger;
+        console.log('this.$attrs--->',this.$attrs)
+        return h("p", [this.address, this.$attrs.a, this.$attrs.b, this.c.n]); //可以用this.$attrs取到a与b的属性;
+      },
+    };
+    //debugger
+    render(
+      h(VueComponent, { address: "方一二", a: 1, b: 2, c: { n: 1 } }),
+      app
+    ); */
+
+    /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+        c: {},
+      },
+      render() {
+        console.log("打印:", this.address + this.$attrs.a + this.$attrs.b + this.c.n);
+        return h("p", this.address + this.$attrs.a + this.$attrs.b + this.c.n); //可以用this.$attrs取到a与b的属性;
+      },
+    };
+    render(
+      h(VueComponent, { address: "方一二", a: 1, b: 2, c: { n: 1 } }),
+      app
+    ); */
+
+    /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+        c: {},
+      },
+      render() {
+        return h("p", [this.address, this.$attrs.a + this.$attrs.b + this.c.n]);
+      },
+    };
+    render(
+      h(VueComponent, { address: "方一二", a: 1, b: 2, c: { n: 1 } }),
+      app
+    ); */
+
+    /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+        c: {},
+      },
+      render() {
+        //this.address = 100;//会提示错误;
+        //this.c.n = 200//因为initProps()中props用的是reactive()深度更新,而不是shallowReactive(),所以会改值;//不应该用reactive()的,而应该是shallowReactive();
+        return h("p", this.address + this.$attrs.a + this.$attrs.b + this.c.n);
+      },
+    };
+    render(
+      h(VueComponent, { address: "方一二", a: 1, b: 2, c: { n: 1 } }),
+      app
+    ); */
+
     const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
     const VueComponent = {
-      data() {
-        return { name: `方`, age: 13 };
-      },
-      render() {
-        //render()函数需要返回虚拟节点,最终渲染的就是返回的虚拟节点;
-        //render()类似于effect(),而data()类似于reactive();
-        setTimeout(() => {
-          this.age++;
-          this.age++;//指数级变动;
-        }, 1000);
-        return h(`p`, `${this.name}今年${this.age}岁了`);
-      },
-    };
-    render(h(VueComponent), app); */
-
-    /* //更新多次;
-    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
-    const VueComponent = {
-      data() {
-        return { name: `方`, age: 13 };
+      props: {
+        address: String,
+        c: {},
       },
       render() {
         setTimeout(() => {
-          this.age++;
-          this.name = this.name + "fang";//指数级变动;
+          this.c.n = 200; //因为initProps()中props用的是reactive()深度更新,而不是shallowReactive(),所以会改值;
         }, 1000);
-        return h(`p`, `${this.name}今年${this.age}岁了`);
+        return h("p", this.address + this.$attrs.a + this.$attrs.b + this.c.n);
       },
     };
-    render(h(VueComponent), app); */
-
-    /* //更新;
-    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
-    const VueComponent = {
-      data() {
-        return { name: `方`, age: 13 };
-      },
-      render() {
-        setTimeout(() => {
-          this.age++;
-        }, 1000);
-        return h(`p`, `${this.name}今年${this.age}岁了`);
-      },
-    };
-    render(h(VueComponent), app); */
-
-    //更新多次;
-    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
-    const VueComponent = {
-      data() {
-        return { name: `方`, age: 13 };
-      },
-      render() {
-        setTimeout(() => {
-          this.age++;
-          this.name = this.name + `fang`;
-        }, 1000);
-        return h(`p`, `${this.name}今年${this.age}岁了`);
-      },
-    };
-    render(h(VueComponent), app);
+    render(
+      h(VueComponent, { address: "方一二", a: 1, b: 2, c: { n: 1 } }),
+      app
+    );
   </script>
 </html>

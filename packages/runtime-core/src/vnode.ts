@@ -20,6 +20,7 @@ export function isSameVnode(n1: VNode, n2: VNode) {
 export type VueComponent = {
   data?: (() => (object))|object;
   render?: (() => VNode);
+  props?: (() => (object))|object;
   [propName: string]: any;//可以定义多余属性;
 }
 

@@ -1,19 +1,34 @@
+//入参是否是对象;
 export const isObject = (value: any): boolean => {
   return typeof value === 'object' && value !== null
 }
 
+//入参是否是字符串;
 export const isString = (value: any): boolean => {
   return typeof value === 'string'
 }
+
+//入参是否是数字;
 export const isNumber = (value: any): boolean => {
   return typeof value === 'number'
 }
 
+//入参是否是方法;
 export const isFunction = (value: any): boolean => {
   return typeof value === 'function'
 }
+
+//入参是否是数组;
 export const isArray = Array.isArray;
+
+//把第一个入参设置为原型,并以此原型返回一个新对象;
 export const assign = Object.assign;
+
+//查看一个属性是否在对象原型上;
+const hasOwnProperty = Object.prototype.hasOwnProperty
+
+//判断key是否是value上的一个属性;
+export const hasOwn = (value: any, key: PropertyKey): boolean => hasOwnProperty.call(value, key)
 
 //ShapeFlags表示节点自身类型,并且子节点是数组还是字符串;
 export const enum ShapeFlags {
