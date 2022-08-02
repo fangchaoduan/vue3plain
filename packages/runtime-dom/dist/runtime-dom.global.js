@@ -292,6 +292,31 @@ var VueRuntimeDOM = (() => {
     instance.props = reactive(props);
     instance.attrs = attrs;
   }
+  var hasPropsChanged = (prevProps = {}, nextProps = {}) => {
+    const nextKeys = Object.keys(nextProps);
+    if (nextKeys.length !== Object.keys(prevProps).length) {
+      return true;
+    }
+    for (let i = 0; i < nextKeys.length; i++) {
+      const key = nextKeys[i];
+      if (nextProps[key] !== prevProps[key]) {
+        return true;
+      }
+    }
+    return false;
+  };
+  function updateProps(instance, prevProps, nextProps) {
+    if (hasPropsChanged(prevProps, nextProps)) {
+      for (const key in nextProps) {
+        instance.props[key] = nextProps[key];
+      }
+      for (const key in instance.props) {
+        if (!hasOwn(nextProps, key)) {
+          delete instance.props[key];
+        }
+      }
+    }
+  }
 
   // packages/runtime-core/src/component.ts
   function createComponentInstance(vnode) {
@@ -366,11 +391,7 @@ var VueRuntimeDOM = (() => {
       patchProp: hostPatchProp
     } = renderOptions2;
     const normalize = (child, index) => {
-      if (isString(child[index])) {
-        const vnode = createVnode(Text, null, child[index]);
-        child[index] = vnode;
-      }
-      if (isNumber(child[index])) {
+      if (isString(child[index]) || isNumber(child[index])) {
         const vnode = createVnode(Text, null, String(child[index]));
         child[index] = vnode;
       }
@@ -479,7 +500,6 @@ var VueRuntimeDOM = (() => {
           patch(oldChild, c2[newIndex], el);
         }
       }
-      console.log("newIndexToOldIndexMap--->", JSON.parse(JSON.stringify(newIndexToOldIndexMap)));
       const increment = getSequence(newIndexToOldIndexMap);
       let j = increment.length - 1;
       for (let theIndex = toBePatched - 1; theIndex >= 0; theIndex--) {
@@ -575,10 +595,17 @@ var VueRuntimeDOM = (() => {
       const update = instance.update = effect2.run.bind(effect2);
       update();
     };
+    const updateComponent = (n1, n2) => {
+      const instance = n2.component = n1.component;
+      const { props: prevProps } = n1;
+      const { props: nextProps } = n2;
+      updateProps(instance, prevProps, nextProps);
+    };
     const processComponent = (n1, n2, container, anchor = null) => {
       if (n1 === null) {
         mountComponent(n2, container, anchor);
       } else {
+        updateComponent(n1, n2);
       }
     };
     const patch = (n1, n2, container, anchor = null) => {

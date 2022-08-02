@@ -5,7 +5,7 @@ import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
 import { getSequence } from "./sequence";
 import { ConvertibleVNode, createVnode, Fragment, isSameVnode, Text, VNode, VNodeChildren, VueComponent } from "./vnode"
 import { queueJob } from "./scheduler";
-import { initProps } from "./componentProps";
+import { initProps, updateProps } from "./componentProps";
 import { createComponentInstance, setupComponent } from "./component";
 
 
@@ -62,15 +62,9 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   //把数字或字符串转成VNode,影响到原子节点数组;
   const normalize = (child: ConvertibleVNode[], index: number): VNode => {
-    //是字符串时;
-    if (isString(child[index])) {
-      const vnode = createVnode(Text, null, child[index] as string)
-      child[index] = vnode
-    }
-
-    //是数字时;
-    if (isNumber(child[index])) {
-      const vnode = createVnode(Text, null, String(child[index] as number))
+    //是字符串或数字时;
+    if (isString(child[index]) || isNumber(child[index])) {
+      const vnode = createVnode(Text, null, String(child[index]))
       child[index] = vnode
     }
 
@@ -259,7 +253,7 @@ export function createRenderer(renderOptions: RenderOptions) {
       }
     }
     //到这只是新老属性和儿子的比对,没有移动位置;//也没有新增过新节点中多余出来的节点;
-    console.log('newIndexToOldIndexMap--->', JSON.parse(JSON.stringify(newIndexToOldIndexMap)))
+    //console.log('newIndexToOldIndexMap--->', JSON.parse(JSON.stringify(newIndexToOldIndexMap)))
 
 
     //获取最长递增子序列;
@@ -428,20 +422,14 @@ export function createRenderer(renderOptions: RenderOptions) {
 
 
 
-  //把组件挂载到容器上;
+  //把vue组件挂载到容器上;
   const mountComponent = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
-    //步骤:
-    //1) 要创造一个组件的实例;
-    //2) 给实例上赋值并进行代理;
-    //3) 创建一个effect;
-
     //1) 要创造一个组件的实例;
     const instance = vnode.component = createComponentInstance(vnode)
-    //2) 给实例上赋值;
+    //2) 给实例上赋值并进行代理;
     setupComponent(instance)
-    //3) 创建一个effect;
+    //3) 根据vue组件实例创建一个effect,并赋值到vue组件实例上;
     setupRenderEffect(instance, container, anchor)
-
   }
 
   //根据vue组件实例创建一个effect,并赋值到vue组件实例上;//effect中将创建一个虚拟节点,并将虚拟节点挂载到容器上;
@@ -475,6 +463,16 @@ export function createRenderer(renderOptions: RenderOptions) {
     update()
   }
 
+  //更新组件;
+  const updateComponent = (n1: RenderVNode, n2: RenderVNode) => {
+    //instance.props 是响应式的,而且可以更改; 属性的更新会导致页面重新渲染;
+    //debugger
+    const instance = (n2.component = n1.component)//对于元素而言,复用的是dom节点;对于组件来说,复用的是实例;//而执行这个方法,必定要复用组件,减少花销;
+
+    const { props: prevProps } = n1;
+    const { props: nextProps } = n2;
+    updateProps(instance, prevProps, nextProps)
+  }
   //处理组件;
   const processComponent = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {//统一处理组件,里面再区分是普通的还是函数式组件;
     //不过函数式组件已经不建议使用了;[函数式组件-vue官方文档](https://v3.cn.vuejs.org/guide/migration/functional-components.html#函数式组件);
@@ -483,6 +481,7 @@ export function createRenderer(renderOptions: RenderOptions) {
       mountComponent(n2, container, anchor)//组件的挂载;
     } else {
       //组件更新靠的是props;
+      updateComponent(n1, n2)
     }
 
   }
@@ -567,6 +566,7 @@ export function createRenderer(renderOptions: RenderOptions) {
     render
   }
 }
+
 //文本的处理,需要自己增加类型;因为不能通过`document.createElement('文本')`创建文本元素;
 //根原因是h()的第一个参数只能是字符串,但这个字符串不能判断它为DOM类型名还是文本;
 //而文本必定是`h()`的第二个参数或第三个参数中的,在处理子节点时处理包装一下文本为VNode节点就好了;

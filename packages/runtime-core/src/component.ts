@@ -79,6 +79,7 @@ export function setupComponent(instance: VueInstance) {
       return console.warn('vue3中组件的data只能是函数,不能再像vue2中可以是对象了');
     }
 
+    //instance实例的上data就是一个新增的响应式数据,它会收集instance.render()中依赖的effect;
     instance.data = reactive(data.call(instance.proxy))
   }
 
