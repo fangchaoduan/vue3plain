@@ -141,7 +141,7 @@
       app
     ); */
 
-    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    /* const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
     const VueComponent = {
       props: {
         address: String,
@@ -156,6 +156,22 @@
     };
     render(
       h(VueComponent, { address: "方一二", a: 1, b: 2, c: { n: 1 } }),
+      app
+    ); */
+
+    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+        c: {},
+      },
+      render() {
+        //alert('弹出')
+        return h("p", this.address + this.$attrs.a + this.$attrs.b + this.c.n);
+      },
+    };
+    render(
+      h(VueComponent, { address: "方", a: 1, b: 2, c: { n: 1 } }),
       app
     );
   </script>

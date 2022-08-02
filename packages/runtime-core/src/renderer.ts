@@ -6,19 +6,22 @@ import { getSequence } from "./sequence";
 import { ConvertibleVNode, createVnode, Fragment, isSameVnode, Text, VNode, VNodeChildren, VueComponent } from "./vnode"
 import { queueJob } from "./scheduler";
 import { initProps } from "./componentProps";
+import { createComponentInstance, setupComponent } from "./component";
 
 
 export type RenderOptions = NodeOperateOptions & {
   patchProp: (el: HTMLElement, key: string, prevValue: any, nextValue: unknown) => void
 }
 
-type RenderVNode = VNode | null | undefined
+export type RenderVNode = null | undefined | VNode & {
+  component?: null | undefined | VueInstance;
+}
 type RenderContainer = HTMLElement & {
-  _vnode?: RenderVNode | null | undefined
+  _vnode?: null | undefined | RenderVNode;
 };
 
 export type VueInstance = {//组件的实例;
-  state: object;//实例的状态;
+  data: null | object;//实例的状态;
   vnode: VNode;  //vue2的源码中组件的虚拟节点叫$vnode,渲染的内容叫_vnode;//vue3中的虚拟节点就叫vnode;
   subTree: VNode | null;//vnode:组件的虚拟节点; subTree:渲染的组件内容,即render返回的虚拟节点或模板编译出来的虚拟节点?
   isMounted: boolean;//组件是否已经挂载了;
@@ -27,6 +30,7 @@ export type VueInstance = {//组件的实例;
   props: object;//组件的props,即特意声明的props;
   attrs: object;//组件的attrs,即不声明的属性;
   proxy: object | null;//代理对象,用来当成组件的render()的this;
+  render?: (() => VNode) | null;//用户在h()函数第一个入参的render()方法;
 }
 
 export function createRenderer(renderOptions: RenderOptions) {
@@ -422,79 +426,27 @@ export function createRenderer(renderOptions: RenderOptions) {
     }
   }
 
-  //一些vue中的公开属性方法;
-  const publictPropertyMap = {
-    $attrs: (instance: VueInstance) => instance.attrs
-  }
+
 
   //把组件挂载到容器上;
   const mountComponent = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
-    const { data = () => ({}), render, props: propsOptions = {} } = vnode.type as VueComponent;//这个就是用户写的组件内容;
+    //步骤:
+    //1) 要创造一个组件的实例;
+    //2) 给实例上赋值并进行代理;
+    //3) 创建一个effect;
 
-    //debugger //propsOptions实际上是VueComponent.props;
+    //1) 要创造一个组件的实例;
+    const instance = vnode.component = createComponentInstance(vnode)
+    //2) 给实例上赋值;
+    setupComponent(instance)
+    //3) 创建一个effect;
+    setupRenderEffect(instance, container, anchor)
 
-    const state = reactive((data as Function)() || data);//pinia源码核心就是reactive({}); //作为组件的状态;
+  }
 
-    const instance: VueInstance = {//组件的实例;
-      state,
-      vnode,
-      subTree: null,
-      isMounted: false,
-      update: null,
-      propsOptions,
-      props: {},
-      attrs: {},
-      proxy: null
-    }
-
-    //instance:实例; vnode.props:用户在h()函数中传的第二个参数;
-    initProps(instance, vnode.props);//给实例赋上props及attrs的值;//vnode.props实际上就是用户在h()中传的第二个参数;
-
-    //debugger
-    //设置代理对象;
-    //实际上在render()中的this指的就是这个,this.props并没有直接改instance.props,而是走到这个代理的set方法中;
-    instance.proxy = new Proxy(instance, {
-      get(target, key) {
-
-        const { state, props } = target
-        if (state && hasOwn(state, key)) {
-          //取data()上的值的流程;
-          return state[key]
-        } else if (props && hasOwn(props, key)) {
-          //取props上的值的流程;
-          return props[key]
-        }
-
-        //取this.$attrs的属性的流程;
-        const getter = publictPropertyMap[key];//this.$attrs;得到一个取值的方法;
-        if (getter) {
-        //console.log('getter(target)--->',getter(target))
-          return getter(target)
-        }
-      },
-      set(target, key, value) {
-
-        const { state, props } = target
-        if (state && hasOwn(state, key)) {
-          //赋值data()上的值的流程;
-          state[key] = value
-          return true
-
-
-        } else if (props && hasOwn(props, key)) {
-          //取props上的值的流程;
-
-          //用户操作的属性是代理对象,在这里面被屏蔽了;
-          //但是可以通过instance.props拿到真实的props并且进行更改;
-          console.warn('禁止修改props上的属性' + (key as string))
-          return false
-        }
-        return true
-      }
-    })
-
-
-    //creactApp(组件).mount('app);//vue3要求一切从组件开始;
+  //根据vue组件实例创建一个effect,并赋值到vue组件实例上;//effect中将创建一个虚拟节点,并将虚拟节点挂载到容器上;
+  const setupRenderEffect = (instance: VueInstance, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
+    const { render } = instance
     const componentUpdateFn = () => {//区分是初始化,还是要更新;
       //console.log('instance--->', instance)
       if (!instance.isMounted) {

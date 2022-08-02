@@ -18,9 +18,9 @@ export function isSameVnode(n1: VNode, n2: VNode) {
 }
 
 export type VueComponent = {
-  data?: (() => (object))|object;
+  data?: () => (object);//vue2中data可以是函数或对象;但vue3中data只能是函数;
   render?: (() => VNode);
-  props?: (() => (object))|object;
+  props?: (() => (object)) | object;
   [propName: string]: any;//可以定义多余属性;
 }
 
