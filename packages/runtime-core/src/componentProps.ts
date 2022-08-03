@@ -25,7 +25,7 @@ export function initProps(instance: VueInstance, rawProps: object) {
 }
 
 //新旧props是否发生了变化;
-const hasPropsChanged = (prevProps: object = {}, nextProps: object = {}): boolean => {
+export const hasPropsChanged = (prevProps: object = {}, nextProps: object = {}): boolean => {
   const nextKeys = Object.keys(nextProps)
 
   //比对属性前后 个数是否一致;
@@ -44,22 +44,19 @@ const hasPropsChanged = (prevProps: object = {}, nextProps: object = {}): boolea
   return false
 }
 
-//通过新旧props来更新vue组件实例;
-export function updateProps(instance: VueInstance, prevProps: object, nextProps: object) {
-  //看一下属性有没有变化;
-  //值的变化,属性的个数是否发生变化;
-  if (hasPropsChanged(prevProps, nextProps)) {
+//用新的props响应式数据来更新旧的props响应式数据;
+export function updateProps(prevProps: object, nextProps: object) {
 
-    //直接用新props进行新增属性或重新赋值;
-    for (const key in nextProps) {
-      instance.props[key] = nextProps[key];//核心;
-    }
+  //直接用新props进行新增属性或重新赋值;
+  for (const key in nextProps) {
+    prevProps[key] = nextProps[key];//核心;
+  }
 
-    //旧props之前有的,但新props的没有了;//此时新旧props都在instance上;
-    for (const key in instance.props) {
-      if (!hasOwn(nextProps, key)) {
-        delete instance.props[key]
-      }
+  //旧props之前有的,但新props的没有了则删除;
+  for (const key in prevProps) {
+    if (!hasOwn(nextProps, key)) {
+      delete prevProps[key]
     }
   }
+
 }

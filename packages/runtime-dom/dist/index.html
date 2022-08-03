@@ -29,6 +29,7 @@
         return h(Text, this.address);
       },
     };
+    //console.log('打印;')
     const VueComponent = {
       data() {
         return {
@@ -42,6 +43,12 @@
         ]);
       },
     };
+    //子组件一般有几种方式更新: 一种是自己的属性如data()变化了就更新; 另一种是父组件变化了props; 另一种是组件内部生命周期如update()或watch之类; 另一种是插槽更新;
+    //一种是自己的属性变化了,就更新;如data()中的数据及在一些生命周期如update之间设置的事件;一般的事件,主要是导致了data()变化,data()为响应式数据,进而让组件实例的render()更新;
+    //一种是父组件变化了props,子组件进行比对,让子组件实例上的props变化,props为响应式数据,进而让组件实例的render()更新;
+    //一种是组件内部生命周期如update()或watch之类;这种应该是这些都是一个effect,自己收集data()及props中的响应式数据组合成一组响应式数据,再执行自身effect;
+    //一种是插槽更新;
+
     render(h(VueComponent), app);
   </script>
 </html>

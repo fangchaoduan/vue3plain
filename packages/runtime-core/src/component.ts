@@ -17,6 +17,7 @@ export function createComponentInstance(vnode: RenderVNode) {
     attrs: {},
     proxy: null,
     render: null,
+    next: null,
   }
   return instance
 }

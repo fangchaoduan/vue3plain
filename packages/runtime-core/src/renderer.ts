@@ -5,7 +5,7 @@ import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
 import { getSequence } from "./sequence";
 import { ConvertibleVNode, createVnode, Fragment, isSameVnode, Text, VNode, VNodeChildren, VueComponent } from "./vnode"
 import { queueJob } from "./scheduler";
-import { initProps, updateProps } from "./componentProps";
+import { hasPropsChanged, initProps, updateProps } from "./componentProps";
 import { createComponentInstance, setupComponent } from "./component";
 
 
@@ -30,6 +30,7 @@ export type VueInstance = {//组件的实例;
   props: object;//组件的props,即特意声明的props;
   attrs: object;//组件的attrs,即不声明的属性;
   proxy: object | null;//代理对象,用来当成组件的render()的this;
+  next: null | VNode,//下次更新需要使用的新的虚拟节点,是一个临时变量,更新时就会重新清空;
   render?: (() => VNode) | null;//用户在h()函数第一个入参的render()方法;
 }
 
@@ -432,6 +433,13 @@ export function createRenderer(renderOptions: RenderOptions) {
     setupRenderEffect(instance, container, anchor)
   }
 
+  //;
+  const updateComponentPreRender = (instance: VueInstance, next: VNode) => {
+    instance.next = null;//清空next;
+    instance.vnode = next;//实例上最新的虚拟节点;
+    updateProps(instance.props, next.props)
+  }
+
   //根据vue组件实例创建一个effect,并赋值到vue组件实例上;//effect中将创建一个虚拟节点,并将虚拟节点挂载到容器上;
   const setupRenderEffect = (instance: VueInstance, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
     const { render } = instance
@@ -446,6 +454,12 @@ export function createRenderer(renderOptions: RenderOptions) {
         instance.isMounted = true
       } else {
         //组件内部更新;
+
+        const { next } = instance
+        if (next) {
+          //更新前,也需要拿到最新的属性来进行更新;
+          updateComponentPreRender(instance, next)
+        }
 
         //console.log('组件内部更新;')
 
@@ -463,15 +477,37 @@ export function createRenderer(renderOptions: RenderOptions) {
     update()
   }
 
+  //比对新旧组件对应的虚拟节点,看是否要更新;
+  const shouldUpdateComponent = (n1: RenderVNode, n2: RenderVNode) => {
+    //插槽就是children;
+    const { props: prevProps, children: prevChildren } = n1;
+    const { props: nextProps, children: nextChildren } = n2;
+    if (prevProps === nextProps) {
+      return false
+    }
+    //只要有插槽就强制进行更新,不用比对;
+    if (prevChildren || nextChildren) {
+      return true
+    }
+    return hasPropsChanged(prevProps, nextProps)
+  }
+
   //更新组件;
   const updateComponent = (n1: RenderVNode, n2: RenderVNode) => {
     //instance.props 是响应式的,而且可以更改; 属性的更新会导致页面重新渲染;
     //debugger
     const instance = (n2.component = n1.component)//对于元素而言,复用的是dom节点;对于组件来说,复用的是实例;//而执行这个方法,必定要复用组件,减少花销;
 
-    const { props: prevProps } = n1;
-    const { props: nextProps } = n2;
-    updateProps(instance, prevProps, nextProps)
+    //属性更新;
+    //updateProps(instance, prevProps, nextProps)
+    //后续插槽发生了变化 逻辑和updateProps()肯定是不一样;
+
+    //没必要分别比对props及插槽,只要一个方法确定是否要更新,之后直接调用vue组件实例的更新方法就可以了;
+    //需要更新就强制调用组件的update()方法;
+    if (shouldUpdateComponent(n1, n2)) {
+      instance.next = n2;//将新的虚拟节点放到next属性上;
+      instance.update()//统一调用update()方法来进行更新;
+    }
   }
   //处理组件;
   const processComponent = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {//统一处理组件,里面再区分是普通的还是函数式组件;
