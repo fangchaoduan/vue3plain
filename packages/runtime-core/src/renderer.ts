@@ -3,7 +3,7 @@ import { hasOwn, isArray, isNumber, isString, ShapeFlags } from "@vue/shared";
 import { ReactiveEffect } from "@vue/reactivity";
 import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
 import { getSequence } from "./sequence";
-import { ConvertibleVNode, createVnode, Fragment, isSameVnode, Text, VNode, VNodeChildren, VueComponent } from "./vnode"
+import { ComponentRender, ConvertibleVNode, createVnode, Fragment, isSameVnode, Text, VNode, VNodeChildren, VueComponent } from "./vnode"
 import { queueJob } from "./scheduler";
 import { hasPropsChanged, initProps, updateProps } from "./componentProps";
 import { createComponentInstance, setupComponent } from "./component";
@@ -31,7 +31,8 @@ export type VueInstance = {//组件的实例;
   attrs: object;//组件的attrs,即不声明的属性;
   proxy: object | null;//代理对象,用来当成组件的render()的this;
   next: null | VNode,//下次更新需要使用的新的虚拟节点,是一个临时变量,更新时就会重新清空;
-  render?: (() => VNode) | null;//用户在h()函数第一个入参的render()方法;
+  render?: ComponentRender | null;//用户在h()函数第一个入参的render()方法;
+  setupState: object,//用户在h()函数第一个入参的render()方法运行后返回的对象
 }
 
 export function createRenderer(renderOptions: RenderOptions) {
@@ -392,6 +393,12 @@ export function createRenderer(renderOptions: RenderOptions) {
     patchProps(oldProps, newProps, el)
 
     //比较子节点;
+    //debugger
+    //n2 = normalize(n2)//这里n2的子节点可能还是个数组,数组中可能并不是VNode,要把子节点转成VNode;
+    for (let index = 0; index < (n2.children as Array<ConvertibleVNode>)?.length; index++) {
+      //debugger
+      n2.children[index] = normalize(n2.children as Array<ConvertibleVNode>, index)//处理后要进行替换,否则children中存放的依旧是字符串;
+    }
     patchChildren(n1, n2, el)
   }
 
@@ -417,6 +424,11 @@ export function createRenderer(renderOptions: RenderOptions) {
       mountChildren(n2.children, container)//走的是新增,直接把子节点挂载到容器中;
     } else {
       //走的是比对,比对新旧虚拟节点的子节点列表;
+      //debugger//这里n2的子节点可能还是个数组,数组中可能并不是VNode,要把子节点转成VNode;
+      for (let index = 0; index < (n2.children as Array<ConvertibleVNode>)?.length; index++) {
+        //debugger
+        n2.children[index] = normalize(n2.children as Array<ConvertibleVNode>, index)//处理后要进行替换,否则children中存放的依旧是字符串;
+      }
       patchChildren(n1, n2, container)//走的是diff算法;
     }
   }
@@ -433,7 +445,7 @@ export function createRenderer(renderOptions: RenderOptions) {
     setupRenderEffect(instance, container, anchor)
   }
 
-  //;
+  //vue组件实例在运行render()前的处理逻辑;
   const updateComponentPreRender = (instance: VueInstance, next: VNode) => {
     instance.next = null;//清空next;
     instance.vnode = next;//实例上最新的虚拟节点;
@@ -506,6 +518,7 @@ export function createRenderer(renderOptions: RenderOptions) {
     //需要更新就强制调用组件的update()方法;
     if (shouldUpdateComponent(n1, n2)) {
       instance.next = n2;//将新的虚拟节点放到next属性上;
+      //debugger
       instance.update()//统一调用update()方法来进行更新;
     }
   }

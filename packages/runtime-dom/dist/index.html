@@ -20,35 +20,205 @@
   <!-- 自己的运行时模块; -->
 
   <script>
-    const { createRenderer, h, render, Text, Fragment } = VueRuntimeDOM;
-    const MyComponent = {
-      props: {
-        address: String,
-      },
-      render() {//this.address -> instance.props.address;
-        return h(Text, this.address);
-      },
-    };
-    //console.log('打印;')
+    /* //初试setup函数:
+    const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
     const VueComponent = {
-      data() {
-        return {
-          flag: false,
+      setup() {
+        const name = ref("方定");
+        const age = ref("13");
+        //返回出去了一些变量;
+        return {//这个对象会帮你去.value;(proxyRefs);
+          name,
+          age,
         };
       },
       render() {
-        return h(Fragment, [
-          h("button", { onClick: () => (this.flag = !this.flag) }, "切换渲染"),
-          h(MyComponent, { address: this.flag ? "地球" : "月球" }),
-        ]);
+        //可以看到setup()中返回的值,可以在render()中直接用this来访问;
+        //可以看到不用`ref变量名.value`就可以访问ref变量;
+        return h(Fragment, [this.name, this.age]);
       },
     };
-    //子组件一般有几种方式更新: 一种是自己的属性如data()变化了就更新; 另一种是父组件变化了props; 另一种是组件内部生命周期如update()或watch之类; 另一种是插槽更新;
-    //一种是自己的属性变化了,就更新;如data()中的数据及在一些生命周期如update之间设置的事件;一般的事件,主要是导致了data()变化,data()为响应式数据,进而让组件实例的render()更新;
-    //一种是父组件变化了props,子组件进行比对,让子组件实例上的props变化,props为响应式数据,进而让组件实例的render()更新;
-    //一种是组件内部生命周期如update()或watch之类;这种应该是这些都是一个effect,自己收集data()及props中的响应式数据组合成一组响应式数据,再执行自身effect;
-    //一种是插槽更新;
+    render(h(VueComponent), app); */
 
-    render(h(VueComponent), app);
+    /* //访问props: 1.在setup()中访问; 2.在render()中访问;
+    const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+        n: Object,
+      },
+      setup(props) {
+        console.log("props--->", props); //可以看到在setup中也可以props;//实际上就是vue组件实例上的props;
+        console.log("props.n--->", props.n);
+        const name = ref("方定");
+        const age = ref("13");
+        return {
+          //这个对象会帮你去.value;(proxyRefs);
+          name,
+          age,
+        };
+      },
+      render() {
+        return h(Fragment, [this.name, this.age, this.address]); //可以直接用this来取传入的props;
+      },
+    };
+    render(h(VueComponent, { address: "地球", n: { a: 1 } }), app); */
+
+    /* const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+      },
+      setup(props) {
+        const name = ref("方定");
+        const age = ref("13");
+        return {
+          //这个对象会帮你去.value;(proxyRefs);
+          name,
+          age,
+          address: props.address + "广西",//这里访问的this并不是组件实例,所以直接用this不能访问到props;//即`this.props属性名`为undefined,而`props.props属性名`则可以访问到对应props的属性值;
+        };
+      },
+      render() {
+        //可以看到render()中this优先访问setup()中暴露出来的方法,之后才访问props或data;
+        return h(Fragment, [this.name, this.age, this.address]);
+      },
+    };
+    render(h(VueComponent, { address: "地球", n: { a: 1 } }), app); */
+
+    /* //一种用法-返回一个非函数对象:
+    const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+      },
+      setup(props) {
+        const name = ref("方定");
+        const age = ref("13");
+        setTimeout(() => {
+          age.value++;//在setup中修改及取值ref变量还是要用`ref变量.value`的形式来改的;
+        }, 1000);
+        return {
+          //这个对象会帮你去.value;(proxyRefs);
+          name,
+          age,
+          address: props.address + "广西一",
+        };
+      },
+      render() {
+        return h(Fragment, [this.name, this.age, this.address]);
+      },
+    };
+    render(h(VueComponent, { address: "地球" }), app); */
+
+    /* //另一种用法-返回一个render函数:
+    const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+      },
+      setup(props) {
+        const name = ref("方定");
+        const age = ref("13");
+        setTimeout(() => {
+          age.value++; //在setup中修改及取值ref变量还是要用`ref变量.value`的形式来改的;
+        }, 1000);
+
+        //返回render函数,数据需要正常的`.value`; 如果返回的是对象,对象可以被自动包裹proxyRefs;
+        return () => {
+          return h(Fragment, [name.value, age.value]);//在setup返回出去的render函数中修改及取值ref变量还是要用`ref变量.value`的形式来改的;
+        };
+      },
+    };
+    render(h(VueComponent, { address: "地球" }), app); */
+
+    /* const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+      },
+      setup(props) {
+        const name = ref("方定");
+        const age = ref("13");
+        setTimeout(() => {
+          age.value++;//在setup中修改及取值ref变量还是要用`ref变量.value`的形式来改的;
+        }, 1000);
+        return {
+          //这个对象会帮你去.value;(proxyRefs);
+          name,
+          age,
+          address: props.address + "广西一",
+        };
+      },
+      render() {
+        //debugger
+        return h('p', [this.name, this.age, this.address]);
+      },
+    };
+    render(h(VueComponent, { address: "地球" }), app); */
+
+    /* const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+      },
+      setup(props) {
+        const name = ref("方定");
+        const age = ref("13");
+        setTimeout(() => {
+          age.value++; //在setup中修改及取值ref变量还是要用`ref变量.value`的形式来改的;
+        }, 1000);
+        return {
+          //这个对象会帮你去.value;(proxyRefs);
+          name,
+          age,
+          address: props.address + "广西一",
+        };
+      },
+      render() {
+        //debugger
+        return h("p", this.name + this.age + this.address);
+      },
+    };
+    render(h(VueComponent, { address: "地球" }), app); */
+
+    /* //这里更新时,出去h()内可能还有问题,因为h()的第一个入参的类型中,可能设定setup()出去的的子节点依旧为数组或字符串,而没有转成VNode;
+    const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+      },
+      setup(props) {
+        const name = ref("方定");
+        const age = ref("13");
+        setTimeout(() => {
+          age.value++;
+        }, 1000);
+
+        return () => {
+          return h(Fragment, [name.value, age.value]);
+        };
+      },
+    };
+    render(h(VueComponent, { address: "地球" }), app); */
+
+    const { createRenderer, h, render, Text, Fragment, ref } = VueRuntimeDOM;
+    const VueComponent = {
+      props: {
+        address: String,
+      },
+      setup(props) {
+        const name = ref("方定");
+        const age = ref("13");
+        setTimeout(() => {
+          age.value++;
+        }, 1000);
+
+        return () => {
+          return h("p", name.value + age.value);
+        };
+      },
+    };
+    render(h(VueComponent, { address: "地球" }), app);
   </script>
 </html>

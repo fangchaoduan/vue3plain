@@ -1,6 +1,6 @@
-import { reactive } from "@vue/reactivity";
-import { hasOwn, isFunction } from "@vue/shared";
-import { VueComponent } from "vue";
+import { proxyRefs, reactive } from "@vue/reactivity";
+import { hasOwn, isFunction, isObject } from "@vue/shared";
+import { ComponentRender, VueComponent } from "vue";
 import { initProps } from "./componentProps";
 import { RenderVNode, VueInstance } from "./renderer";
 
@@ -18,6 +18,7 @@ export function createComponentInstance(vnode: RenderVNode) {
     proxy: null,
     render: null,
     next: null,
+    setupState: {}
   }
   return instance
 }
@@ -30,10 +31,14 @@ const publictPropertyMap = {
 //vue组件实例的代理对象;
 const publicInstanceProxy = {
   get(target: VueInstance, key: string | symbol) {
-    const { data, props } = target
+    const { data, props, setupState } = target
+    //取值顺序由下方的if()顺序来;
     if (data && hasOwn(data, key)) {
       //取data()上的值的流程;
       return data[key]
+    } else if (props && hasOwn(setupState, key)) {
+      //取setup()返回出来对象的值的流程;
+      return setupState[key]
     } else if (props && hasOwn(props, key)) {
       //取props上的值的流程;
       return props[key]
@@ -48,14 +53,19 @@ const publicInstanceProxy = {
   },
   set(target: VueInstance, key: string | symbol, value: any) {
 
-    const { data, props } = target
+    const { data, props, setupState } = target
+    //赋值顺序由下方的if()顺序来;
     if (data && hasOwn(data, key)) {
       //赋值data()上的值的流程;
       data[key] = value
-      return true
+      //return true
 
+    } else if (props && hasOwn(setupState, key)) {
+      //赋值setup()返回出来对象的值的流程;
+      setupState[key] = value
+      //return true
     } else if (props && hasOwn(props, key)) {
-      //取props上的值的流程;
+      //赋值props上的值的流程;
 
       //用户操作的属性是代理对象,在这里面被屏蔽了;
       //但是可以通过instance.props拿到真实的props并且进行更改;
@@ -84,5 +94,22 @@ export function setupComponent(instance: VueInstance) {
     instance.data = reactive(data.call(instance.proxy))
   }
 
-  instance.render = (type as VueComponent).render
+  const setup = (type as VueComponent).setup
+  if (setup) {
+    const setupContext = {}//上下文;
+    const setupResult = setup(instance.props, setupContext)
+    if (isFunction(setupResult)) {
+      instance.render = setupResult as ComponentRender
+    } else if (isObject(setupResult)) {
+      //对内部的ref进行`取消.value`;
+      instance.setupState = proxyRefs(setupResult)
+    }
+  }
+
+  //依旧没新建render,便直接取实例虚拟节点上的render();
+  if (!instance.render) {
+    instance.render = (type as VueComponent).render
+  }
+
+
 }

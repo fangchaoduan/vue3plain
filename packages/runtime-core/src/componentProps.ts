@@ -49,7 +49,7 @@ export function updateProps(prevProps: object, nextProps: object) {
 
   //直接用新props进行新增属性或重新赋值;
   for (const key in nextProps) {
-    prevProps[key] = nextProps[key];//核心;
+    prevProps[key] = nextProps[key];//核心;//这里就会触发effect更新,但由于activeEffect都是同一个ReactiveEffect,所以没有多次更新;
   }
 
   //旧props之前有的,但新props的没有了则删除;
