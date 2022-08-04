@@ -33,8 +33,8 @@ export type VNodeType = string | Symbol | VueComponent
 //虚拟节点的props类型;
 export declare type VNodeProps = object | undefined | null
 
-//虚拟节点的children类型;
-export type VNodeChildren = undefined | null | ConvertibleVNode | Array<ConvertibleVNode>
+//虚拟节点的children类型;//如果是对象,则代理是组件的插槽;
+export type VNodeChildren = undefined | null | ConvertibleVNode | Array<ConvertibleVNode> | object
 
 //虚拟节点类型,可以认为它不包含null与undefined;
 export type VNode = {
@@ -72,8 +72,13 @@ export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeC
   if (children) {
     let type = 0;
     if (isArray(children)) {
+      //说明是子节点列表;
       type = ShapeFlags.ARRAY_CHILDREN;
+    } else if(isObject(children)) {
+      //说明是组件的插槽;
+      type = ShapeFlags.SLOTS_CHILDREN;//说明这个组件是带有插槽的;
     } else {
+      //说明是单独的一个子节点;
       children = String(children)
       type = ShapeFlags.TEXT_CHILDREN
     }

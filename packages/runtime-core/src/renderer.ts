@@ -32,7 +32,8 @@ export type VueInstance = {//组件的实例;
   proxy: object | null;//代理对象,用来当成组件的render()的this;
   next: null | VNode,//下次更新需要使用的新的虚拟节点,是一个临时变量,更新时就会重新清空;
   render?: ComponentRender | null;//用户在h()函数第一个入参的render()方法;
-  setupState: object,//用户在h()函数第一个入参的render()方法运行后返回的对象
+  setupState: object,//用户在h()函数第一个入参的render()方法运行后返回的对象;
+  slots: object,//组件的插槽相关内容;
 }
 
 export function createRenderer(renderOptions: RenderOptions) {

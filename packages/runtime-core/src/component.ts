@@ -1,6 +1,6 @@
 import { proxyRefs, reactive } from "@vue/reactivity";
-import { hasOwn, isFunction, isObject } from "@vue/shared";
-import { ComponentRender, VueComponent } from "vue";
+import { hasOwn, isFunction, isObject, ShapeFlags } from "@vue/shared";
+import { ComponentRender, VNodeChildren, VueComponent } from "vue";
 import { initProps } from "./componentProps";
 import { RenderVNode, VueInstance } from "./renderer";
 
@@ -18,14 +18,16 @@ export function createComponentInstance(vnode: RenderVNode) {
     proxy: null,
     render: null,
     next: null,
-    setupState: {}
+    setupState: {},
+    slots: {},
   }
   return instance
 }
 
 //一些vue中的公开属性方法;
 const publictPropertyMap = {
-  $attrs: (instance: VueInstance) => instance.attrs
+  $attrs: (instance: VueInstance) => instance.attrs,
+  $slots: (instance: VueInstance) => instance.slots,
 }
 
 //vue组件实例的代理对象;
@@ -76,11 +78,20 @@ const publicInstanceProxy = {
   }
 }
 
+//初始化vue组件实例的插槽;
+function initSlots(instance: VueInstance, children: VNodeChildren) {
+  //判断实例上的虚拟节点是否是带插槽的;
+  if (instance.vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
+    instance.slots = children as object //保留children,当成插槽的render()函数用来生成虚拟节点;
+  }
+}
+
 //给vue组件实例进行赋值及代理;
 export function setupComponent(instance: VueInstance) {
-  const { props, type } = instance.vnode
+  const { props, type, children } = instance.vnode
 
   initProps(instance, props);//给实例赋上props及attrs的值;
+  initSlots(instance, children)
   instance.proxy = new Proxy(instance, publicInstanceProxy)
 
   const data = (type as VueComponent).data
@@ -96,7 +107,27 @@ export function setupComponent(instance: VueInstance) {
 
   const setup = (type as VueComponent).setup
   if (setup) {
-    const setupContext = {}//上下文;
+
+    //上下文;
+    const setupContext = {
+      //事件的实现原理;
+      //典型的发布订阅模式;
+      //父组件上用`@事件名`来将订阅放到instance.vnode.props;子组件内部则用emit()将事件名对应的事件发布;
+      //组件实例上的虚拟节点的props属性即instance.vnode.props,则是一个中转;
+      emit: (event: string, ...args) => {
+        //vue里面,@绑定的事件,会变成`onX`,即`前面加on,同时事件名首字母大写`;
+        //把用户通过emit()传入的事件名处理成真正的props名;
+        const eventName = `on${event[0].toUpperCase() + event.slice(1)}`
+
+        //找到虚拟节点的属性在存放props,取出在h()函数中绑定的事件;
+        const handler = instance.vnode.props[eventName]
+        if (handler) {
+          handler(...args)
+        }
+      },
+      attrs: instance.attrs,
+      slots: instance.slots,
+    }
     const setupResult = setup(instance.props, setupContext)
     if (isFunction(setupResult)) {
       instance.render = setupResult as ComponentRender
@@ -113,3 +144,4 @@ export function setupComponent(instance: VueInstance) {
 
 
 }
+
