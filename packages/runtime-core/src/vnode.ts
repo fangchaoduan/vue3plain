@@ -1,6 +1,6 @@
 //type,即节点类型;props,属性;children,子节点;
 
-import { isArray, isObject, isString, ShapeFlags } from "@vue/shared";
+import { isArray, isObject, isString, PatchFlags, ShapeFlags } from "@vue/shared";
 
 
 export const Text = Symbol('Text')//用于h()函数内部创建文本的标识;
@@ -31,7 +31,10 @@ export type VueComponent = {
 export type VNodeType = string | Symbol | VueComponent
 
 //虚拟节点的props类型;
-export declare type VNodeProps = object | undefined | null
+export declare type VNodeProps = undefined | null | {
+  class?: null | undefined | object,
+  [property: string]: any,
+}
 
 //虚拟节点的children类型;//如果是对象,则代理是组件的插槽;
 export type VNodeChildren = undefined | null | ConvertibleVNode | Array<ConvertibleVNode> | object
@@ -45,16 +48,20 @@ export type VNode = {
   key: any;
   __v_isVnode: boolean;
   shapeFlag: number;
+  patchFlag: PatchFlags;//动态虚拟节点标识;
+  dynamicChildren?: VNode[];//动态节点节点类型;
 }
 
 //可转化为虚拟节点的类型;
 export type ConvertibleVNode = string | VNode | number
 
 //虚拟节点有很多:组件的,元素的,文本的等; //h('h1);
-export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeChildren = null): VNode {
+export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeChildren = null, patchFlag: PatchFlags = 0): VNode {
   //组合方案 shapeFlag;
   //想知道一个元素中包含的是多个儿子还是一个儿子;
   //标识;
+
+  //debugger
   let shapeFlag = isString(type) ?
     ShapeFlags.ELEMENT :
     isObject(type) ? ShapeFlags.STATEFUL_COMPONENT : 0;
@@ -67,14 +74,15 @@ export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeC
     el: null,//虚拟节点上对应的真实节点,后续diff算法优化要用到;
     key: props?.['key'],
     __v_isVnode: true,
-    shapeFlag
+    shapeFlag,
+    patchFlag,
   }
   if (children) {
     let type = 0;
     if (isArray(children)) {
       //说明是子节点列表;
       type = ShapeFlags.ARRAY_CHILDREN;
-    } else if(isObject(children)) {
+    } else if (isObject(children)) {
       //说明是组件的插槽;
       type = ShapeFlags.SLOTS_CHILDREN;//说明这个组件是带有插槽的;
     } else {
@@ -85,6 +93,41 @@ export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeC
     //vnode.shapeFlag |= type
     vnode.shapeFlag = vnode.shapeFlag | type
   }
+
+  if (currentBlock && vnode.patchFlag > 0) {
+    currentBlock.push(vnode)
+  }
   return vnode
 
+}
+
+//创建虚拟节点,与createVnode一样;
+//把createVnode重命名为createElementVNode,并导出createElementVNode;
+export { createVnode as createElementVNode }
+
+//用来收集多个动态节点的数组;
+let currentBlock: VNode[] | null = null;
+
+//用一个数组来收集多个动态节点;
+export function openBlock() {
+  //类似于: 生命周期: 用instance 收集-> 多个fn;
+  currentBlock = []
+
+}
+export function createElementBlock(type: VNodeType, props: object, children: VNodeChildren, patchFlag: PatchFlags): VNode {
+  return setupBlock(createVnode(type, props, children, patchFlag))
+}
+
+function setupBlock(vnode: VNode): VNode {
+  vnode.dynamicChildren = currentBlock
+  currentBlock = null
+  return vnode;
+}
+/* //创建虚拟节点,实际上就是createVnode;
+export function createElementVNode() {
+
+} */
+export function toDisplayString(value: any) {
+  //debugger
+  return isString(value) ? value : value === undefined || value === null ? '' : isObject(value) ? JSON.stringify(value) : String(value)
 }

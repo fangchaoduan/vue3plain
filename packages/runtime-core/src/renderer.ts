@@ -1,5 +1,5 @@
 import { reactive } from "@vue/reactivity";
-import { hasOwn, invokeArrayFns, isArray, isNumber, isString, ShapeFlags } from "@vue/shared";
+import { hasOwn, invokeArrayFns, isArray, isNumber, isString, PatchFlags, ShapeFlags } from "@vue/shared";
 import { ReactiveEffect } from "@vue/reactivity";
 import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
 import { getSequence } from "./sequence";
@@ -309,6 +309,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   }
 
+  //全量比较虚拟节点的子节点列表;
   //比较两个虚拟节点的子节点的差异,el就是当前两个虚拟节点对应的真实DOM元素;
   const patchChildren = (n1: RenderVNode, n2: RenderVNode, el: HTMLElement) => {
     const c1 = n1?.children || null//旧虚拟节点的子节点列表;
@@ -384,6 +385,13 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   }
 
+  const patchBlockChildren = (n1: RenderVNode, n2: RenderVNode) => {
+    for (let i = 0; i < n2.dynamicChildren.length; i++) {
+      //之前是树的递归比较,现在是数组的比较;
+      patchElement(n1.dynamicChildren[i], n2.dynamicChildren[i])
+    }
+  }
+
   //用于进行虚拟节点为HTML元素的比对;
   //如果元素一样: 先复用节点,再比较属性,再比较儿子(子节点);
   const patchElement = (n1: RenderVNode, n2: RenderVNode) => {
@@ -394,16 +402,45 @@ export function createRenderer(renderOptions: RenderOptions) {
     const newProps = n2.props || {}//对象;//表示新虚拟节点的props;
 
     //比较属性;
-    patchProps(oldProps, newProps, el)
+
+    const { patchFlag } = n2
+    //console.log('oldProps?.class--->', oldProps?.class, 'newProps?.class--->', newProps?.class,)
+    //console.log('patchFlag--->', patchFlag)
+    if (patchFlag & PatchFlags.CLASS) {
+      if (oldProps?.class !== newProps?.class) {
+        //debugger
+        hostPatchProp(el, 'class', null, newProps.class)
+      }
+      //像style .. 与事件等,都可以仿照这个来进行靶向更新;
+    } else {
+      //比较所有属性;
+      patchProps(oldProps, newProps, el)
+    }
 
     //比较子节点;
     //debugger
     //n2 = normalize(n2)//这里n2的子节点可能还是个数组,数组中可能并不是VNode,要把子节点转成VNode;
-    for (let index = 0; index < (n2.children as Array<ConvertibleVNode>)?.length; index++) {
-      //debugger
-      n2.children[index] = normalize(n2.children as Array<ConvertibleVNode>, index)//处理后要进行替换,否则children中存放的依旧是字符串;
+    if (isArray(n2.children)) {
+      for (let index = 0; index < (n2.children as Array<ConvertibleVNode>)?.length; index++) {
+        //debugger
+        n2.children[index] = normalize(n2.children as Array<ConvertibleVNode>, index)//处理后要进行替换,否则children中存放的依旧是字符串;
+      }
     }
-    patchChildren(n1, n2, el)
+
+    //这里的patchChildren()是一个全量的diff算法;
+    //不过有些节点是非动态节点,实际更新时,一般只要比较动态节点就好了;
+    //查看新虚拟节点是否有动态节点;
+    //有动态节点数组,直接比对动态节点数组--数组的比较;
+    //没动态节点数组,就和之前一样比对子节点列表--树的递归比较;
+    if (n2.dynamicChildren) {
+      // debugger
+      //元素之间的优化--靶向更新,只比较动态节点了;
+      patchBlockChildren(n1, n2)
+    } else {
+      //h1还在这呢;
+      patchChildren(n1, n2, el)
+    }
+
   }
 
   //处理元素:
@@ -428,11 +465,15 @@ export function createRenderer(renderOptions: RenderOptions) {
       mountChildren(n2.children, container)//走的是新增,直接把子节点挂载到容器中;
     } else {
       //走的是比对,比对新旧虚拟节点的子节点列表;
+
       //debugger//这里n2的子节点可能还是个数组,数组中可能并不是VNode,要把子节点转成VNode;
-      for (let index = 0; index < (n2.children as Array<ConvertibleVNode>)?.length; index++) {
-        //debugger
-        n2.children[index] = normalize(n2.children as Array<ConvertibleVNode>, index)//处理后要进行替换,否则children中存放的依旧是字符串;
+      if (isArray(n2.children)) {
+        for (let index = 0; index < (n2.children as Array<ConvertibleVNode>)?.length; index++) {
+          //debugger
+          n2.children[index] = normalize(n2.children as Array<ConvertibleVNode>, index)//处理后要进行替换,否则children中存放的依旧是字符串;
+        }
       }
+
       patchChildren(n1, n2, container)//走的是diff算法;
     }
   }
@@ -470,7 +511,7 @@ export function createRenderer(renderOptions: RenderOptions) {
           invokeArrayFns(bm)
         }
 
-        const subTree: VNode = render.call(instance.proxy);//得到一个虚拟节点;//作为this,后续this会改;
+        const subTree: VNode = render.call(instance.proxy, instance.proxy);//得到一个虚拟节点;//作为this,后续this会改;
         patch(null, subTree, container, anchor)//创造了subTree的真实节点并且插入了容器;
 
         //生命周期钩子-onMounted-组件实例挂载后;
@@ -497,7 +538,7 @@ export function createRenderer(renderOptions: RenderOptions) {
           invokeArrayFns(bu)
         }
 
-        const subTree: VNode = render.call(instance.proxy);//得到一个新的节点;
+        const subTree: VNode = render.call(instance.proxy, instance.proxy);//得到一个新的节点;
         patch(instance.subTree, subTree, container, anchor)
         instance.subTree = subTree//将新节点保存到实例上,变成下次更新时的老节点;
 
@@ -605,6 +646,7 @@ export function createRenderer(renderOptions: RenderOptions) {
         break
       default: //元素的标签;
         if (shapeFlag & ShapeFlags.ELEMENT) {
+          //debugger
           processElement(n1, n2, container, anchor)
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
           //文档一般只能在会的时候看,不会的时候很难看懂;

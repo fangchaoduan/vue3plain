@@ -27,6 +27,8 @@ var VueRuntimeDOM = (() => {
     activeEffect: () => activeEffect,
     computed: () => computed,
     createComponentInstance: () => createComponentInstance,
+    createElementBlock: () => createElementBlock,
+    createElementVNode: () => createVnode,
     createRenderer: () => createRenderer,
     createVnode: () => createVnode,
     currentInstance: () => currentInstance,
@@ -39,12 +41,14 @@ var VueRuntimeDOM = (() => {
     onBeforeUpdate: () => onBeforeUpdate,
     onMounted: () => onMounted,
     onUpdated: () => onUpdated,
+    openBlock: () => openBlock,
     proxyRefs: () => proxyRefs,
     reactive: () => reactive,
     ref: () => ref,
     render: () => render,
     setCurrentInstance: () => setCurrentInstance,
     setupComponent: () => setupComponent,
+    toDisplayString: () => toDisplayString,
     toRef: () => toRef,
     toRefs: () => toRefs,
     track: () => track,
@@ -422,7 +426,7 @@ var VueRuntimeDOM = (() => {
   function isSameVnode(n1, n2) {
     return n1.type === n2.type && n1.key === n2.key;
   }
-  function createVnode(type, props, children = null) {
+  function createVnode(type, props, children = null, patchFlag = 0) {
     let shapeFlag = isString(type) ? 1 /* ELEMENT */ : isObject(type) ? 4 /* STATEFUL_COMPONENT */ : 0;
     const vnode = {
       type,
@@ -431,7 +435,8 @@ var VueRuntimeDOM = (() => {
       el: null,
       key: props == null ? void 0 : props["key"],
       __v_isVnode: true,
-      shapeFlag
+      shapeFlag,
+      patchFlag
     };
     if (children) {
       let type2 = 0;
@@ -445,7 +450,25 @@ var VueRuntimeDOM = (() => {
       }
       vnode.shapeFlag = vnode.shapeFlag | type2;
     }
+    if (currentBlock && vnode.patchFlag > 0) {
+      currentBlock.push(vnode);
+    }
     return vnode;
+  }
+  var currentBlock = null;
+  function openBlock() {
+    currentBlock = [];
+  }
+  function createElementBlock(type, props, children, patchFlag) {
+    return setupBlock(createVnode(type, props, children, patchFlag));
+  }
+  function setupBlock(vnode) {
+    vnode.dynamicChildren = currentBlock;
+    currentBlock = null;
+    return vnode;
+  }
+  function toDisplayString(value) {
+    return isString(value) ? value : value === void 0 || value === null ? "" : isObject(value) ? JSON.stringify(value) : String(value);
   }
 
   // packages/runtime-core/src/scheduler.ts
@@ -782,16 +805,34 @@ var VueRuntimeDOM = (() => {
         }
       }
     };
+    const patchBlockChildren = (n1, n2) => {
+      for (let i = 0; i < n2.dynamicChildren.length; i++) {
+        patchElement(n1.dynamicChildren[i], n2.dynamicChildren[i]);
+      }
+    };
     const patchElement = (n1, n2) => {
       var _a;
       const el = n2.el = n1.el;
       const oldProps = n1.props || {};
       const newProps = n2.props || {};
-      patchProps(oldProps, newProps, el);
-      for (let index = 0; index < ((_a = n2.children) == null ? void 0 : _a.length); index++) {
-        n2.children[index] = normalize(n2.children, index);
+      const { patchFlag } = n2;
+      if (patchFlag & 2 /* CLASS */) {
+        if ((oldProps == null ? void 0 : oldProps.class) !== (newProps == null ? void 0 : newProps.class)) {
+          hostPatchProp(el, "class", null, newProps.class);
+        }
+      } else {
+        patchProps(oldProps, newProps, el);
       }
-      patchChildren(n1, n2, el);
+      if (isArray(n2.children)) {
+        for (let index = 0; index < ((_a = n2.children) == null ? void 0 : _a.length); index++) {
+          n2.children[index] = normalize(n2.children, index);
+        }
+      }
+      if (n2.dynamicChildren) {
+        patchBlockChildren(n1, n2);
+      } else {
+        patchChildren(n1, n2, el);
+      }
     };
     const processElement = (n1, n2, container, anchor = null) => {
       if (n1 === null) {
@@ -809,8 +850,10 @@ var VueRuntimeDOM = (() => {
         }
         mountChildren(n2.children, container);
       } else {
-        for (let index = 0; index < ((_a = n2.children) == null ? void 0 : _a.length); index++) {
-          n2.children[index] = normalize(n2.children, index);
+        if (isArray(n2.children)) {
+          for (let index = 0; index < ((_a = n2.children) == null ? void 0 : _a.length); index++) {
+            n2.children[index] = normalize(n2.children, index);
+          }
         }
         patchChildren(n1, n2, container);
       }
@@ -833,7 +876,7 @@ var VueRuntimeDOM = (() => {
           if (bm) {
             invokeArrayFns(bm);
           }
-          const subTree = render3.call(instance.proxy);
+          const subTree = render3.call(instance.proxy, instance.proxy);
           patch(null, subTree, container, anchor);
           if (m) {
             invokeArrayFns(m);
@@ -849,7 +892,7 @@ var VueRuntimeDOM = (() => {
           if (bu) {
             invokeArrayFns(bu);
           }
-          const subTree = render3.call(instance.proxy);
+          const subTree = render3.call(instance.proxy, instance.proxy);
           patch(instance.subTree, subTree, container, anchor);
           instance.subTree = subTree;
           if (u) {

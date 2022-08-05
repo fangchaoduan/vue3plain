@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue组件runtime-dom</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+    <!-- <div>
+  <span>123231</span>
+  <div>{{aaa}}</div>
+  <p>
+    <span>{{bbb}}</span>
+  </p>
+</div>
+
+更新前: div.dymanicChildren=[div,span]即[<div>{{aaa}}</div>,<span>{{bbb}}</span>]
+
+更新后: div.dymanicChildren=[div,span] -->
+
+    <!-- <div>
+  <span>123231</span>
+  <div>{{aaa}}</div>
+  <p>
+    <span>{{bbb}}</span>
+    <p>
+      {{aaa}}
+      <a>123</a>
+    </p>
+  </p>
+</div>
+
+更新前: div.dymanicChildren=[div,span,p]
+
+更新后: div.dymanicChildren=[div,span,p] -->
+
+    <!-- <div>
+  <span>123231</span>
+  <div>{{aaa}}</div>
+  <p>
+    <span>{{bbb}}</span>
+    <p>
+      {{aaa}}
+      <a>{{bbb}}</a>
+    </p>
+  </p>
+</div>
+
+转成:
+(_openBlock(), _createElementBlock("div", null, [
+  _createElementVNode("span", null, "123231"),
+  _createElementVNode("div", null, _toDisplayString(aaa), 1 /* TEXT */),
+  _createElementVNode("p", null, [
+    _createElementVNode("span", null, _toDisplayString(bbb), 1 /* TEXT */),
+    _createElementVNode("p", null, [
+      _createTextVNode(_toDisplayString(aaa) + " ", 1 /* TEXT */),
+      _createElementVNode("a", null, _toDisplayString(bbb), 1 /* TEXT */)
+    ])
+  ])
+])) -->
+
+    <!-- <div>
+  <span>123231</span>
+  <div>{{aaa}}</div>
+  <p>
+    {{aaa}}
+    <a>{{bbb}}</a>
+  </p>
+</div>
+转成:
+(_openBlock(), _createElementBlock("div", null, [
+  _createElementVNode("span", null, "123231"),
+  _createElementVNode("div", null, _toDisplayString(aaa), 1 /* TEXT */),
+  _createElementVNode("p", null, [
+    _createTextVNode(_toDisplayString(aaa) + " ", 1 /* TEXT */),
+    _createElementVNode("a", null, _toDisplayString(bbb), 1 /* TEXT */)
+  ])
+])) -->
+
+    <!-- <div>
+  <span>123231</span>
+  <div>{{aaa}}</div>
+  <p :a="aaa">
+    {{aaa}}
+    <a>{{bbb}}</a>
+  </p>
+</div>
+转成:
+(_openBlock(), _createElementBlock("div", null, [
+  _createElementVNode("span", null, "123231"),
+  _createElementVNode("div", null, _toDisplayString(aaa), 1 /* TEXT */),
+  _createElementVNode("p", { a: aaa }, [
+    _createTextVNode(_toDisplayString(aaa) + " ", 1 /* TEXT */),
+    _createElementVNode("a", null, _toDisplayString(bbb), 1 /* TEXT */)
+  ], 8 /* PROPS */, ["a"])
+])) -->
+  </body>
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script> -->
+  <!-- vue内部的运行时模块-开发环境的;组件中this.$attrs是响应式对象; -->
+
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.prod.js"></script> -->
+  <!-- vue内部的运行时模块-生产环境的;组件中this.$attrs不是响应式对象; -->
+
+  <script src="./runtime-dom.global.js"></script>
+  <!-- 自己的运行时模块; -->
+
+  <script>
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+    } = VueRuntimeDOM;
+    //openBlock的作用是收集动态节点;
+    //把虚拟节点中的动态子节点放在aymanicChildren这个数组中;
+    //也就是说,如果虚拟节点变化了,那么只要更新它的动态子节点数组;这个就是靶向更新;
+    const VueComponent = {
+      render(_ctx) {
+        _ctx.name = 100; //一般这个值是data()或setup()中来的,不建议这样做,目前是为了方便,不想写data();
+        console.log("_ctx.name--->", _ctx.name);//取值时,如果不是props之类的,会走到publicInstanceProxy()代理对象中,导致取不到值;
+        const vnode =
+          (_openBlock(),
+          _createElementBlock("div", null, [
+            _createElementVNode("h1", null, "Hello Jiang"),
+            _createElementVNode("span", null, _toDisplayString(_ctx.name), 1),
+          ]));
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    render(h(VueComponent), app); */
+
+    //一般vue开发中并不怎么使用render(),而是templte;
+
+    /* <div>
+      <h1>Hello Jiang</h1>
+      <span>{{name}}</span>
+    </div> */
+
+    /* <div>
+      <h1>Hello Jiang</h1>
+      <span>{{name}}</span>
+    </div>
+    在[vue模块转成vnode](https://vue-next-template-explorer.netlify.app/)中转成:
+    (_openBlock(), _createElementBlock("div", null, [
+      _createElementVNode("h1", null, "Hello Jiang"),
+      _createElementVNode("span", null, _toDisplayString(_ctx.name), 1)
+    ])) */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+    } = VueRuntimeDOM;
+    //openBlock的作用是收集动态节点;
+    //把虚拟节点中的动态子节点放在aymanicChildren这个数组中;
+    //也就是说,如果虚拟节点变化了,那么只要更新它的动态子节点数组;这个就是靶向更新;
+    const VueComponent = {
+      setup() {
+        const state = reactive({ name: "方" });
+        return {
+          state,
+        };
+      },
+      render(_ctx) {
+        const vnode =
+          (_openBlock(),
+          _createElementBlock("div", null, [
+            _createElementVNode("h1", null, "Hello Jiang"),
+            _createElementVNode(
+              "span",
+              null,
+              _toDisplayString(_ctx.state.name),
+              1
+            ),
+          ]));
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+    } = VueRuntimeDOM;
+    //openBlock的作用是收集动态节点;
+    //把虚拟节点中的动态子节点放在aymanicChildren这个数组中;
+    //也就是说,如果虚拟节点变化了,那么只要更新它的动态子节点数组;这个就是靶向更新;
+    const VueComponent = {
+      setup() {
+        const state = reactive({ name: "方" });
+        setTimeout(() => {
+          state.name = "方一";
+        }, 1000);
+        return {
+          state,
+        };
+      },
+      render(_ctx) {
+        const vnode =
+          (_openBlock(),
+          _createElementBlock("div", null, [
+            _createElementVNode("h1", null, "Hello Jiang"),
+            _createElementVNode(
+              "span",
+              null,
+              _toDisplayString(_ctx.state.name),
+              1
+            ),
+          ]));
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* <div>
+      <h1>Hello Jiang</h1>
+      <span :class="a">abc</span>
+    </div>
+    在[vue模块转成vnode](https://vue-next-template-explorer.netlify.app/)中转成:
+    (_openBlock(), _createElementBlock("div", null, [
+      _createElementVNode("h1", null, "Hello Jiang"),
+      _createElementVNode("span", {
+        class: _normalizeClass(a)
+      }, "abc", 2 )
+      ])) */
+
+    const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+    } = VueRuntimeDOM;
+    //openBlock的作用是收集动态节点;
+    //把虚拟节点中的动态子节点放在aymanicChildren这个数组中;
+    //也就是说,如果虚拟节点变化了,那么只要更新它的动态子节点数组;这个就是靶向更新;
+    const VueComponent = {
+      setup() {
+        const state = reactive({ name: "方", claxx: "abc" });
+        setTimeout(() => {
+          state.claxx = "fang";
+        }, 1000);
+        return {
+          state,
+        };
+      },
+      render(_ctx) {
+        Object.d;
+        const vnode =
+          (_openBlock(),
+          _createElementBlock("div", null, [
+            _createElementVNode("h1", null, "Hello Jiang"),
+            _createElementVNode("span", { class: _ctx.state.claxx }, "abc", 2),
+          ]));
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    render(h(VueComponent), app);
+  </script>
+</html>
