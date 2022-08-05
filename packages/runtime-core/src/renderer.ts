@@ -1,5 +1,5 @@
 import { reactive } from "@vue/reactivity";
-import { hasOwn, isArray, isNumber, isString, ShapeFlags } from "@vue/shared";
+import { hasOwn, invokeArrayFns, isArray, isNumber, isString, ShapeFlags } from "@vue/shared";
 import { ReactiveEffect } from "@vue/reactivity";
 import { NodeOperateOptions } from "packages/runtime-dom/src/nodeOps";
 import { getSequence } from "./sequence";
@@ -7,6 +7,7 @@ import { ComponentRender, ConvertibleVNode, createVnode, Fragment, isSameVnode, 
 import { queueJob } from "./scheduler";
 import { hasPropsChanged, initProps, updateProps } from "./componentProps";
 import { createComponentInstance, setupComponent } from "./component";
+import { LifecycleHooks } from "./apiLifecycle";
 
 
 export type RenderOptions = NodeOperateOptions & {
@@ -34,7 +35,9 @@ export type VueInstance = {//组件的实例;
   render?: ComponentRender | null;//用户在h()函数第一个入参的render()方法;
   setupState: object,//用户在h()函数第一个入参的render()方法运行后返回的对象;
   slots: object,//组件的插槽相关内容;
-}
+} & {
+    [lifecycle in LifecycleHooks]?: Array<Function>;//组件生命周期钩子函数;
+  };
 
 export function createRenderer(renderOptions: RenderOptions) {
   const {
@@ -461,8 +464,20 @@ export function createRenderer(renderOptions: RenderOptions) {
       if (!instance.isMounted) {
         //初始化;
 
+        const { bm, m } = instance //生命周期;
+        //生命周期钩子-onBeforeMount-组件实例挂载前;
+        if (bm) {
+          invokeArrayFns(bm)
+        }
+
         const subTree: VNode = render.call(instance.proxy);//得到一个虚拟节点;//作为this,后续this会改;
         patch(null, subTree, container, anchor)//创造了subTree的真实节点并且插入了容器;
+
+        //生命周期钩子-onMounted-组件实例挂载后;
+        if (m) {
+          invokeArrayFns(m)
+        }
+
         instance.subTree = subTree//将虚拟节点挂载到实例上;
         instance.isMounted = true
       } else {
@@ -476,9 +491,20 @@ export function createRenderer(renderOptions: RenderOptions) {
 
         //console.log('组件内部更新;')
 
+        const { bu, u } = instance //生命周期;
+        //生命周期钩子-onBeforeUpdate-组件实例更新前;
+        if (bu) {
+          invokeArrayFns(bu)
+        }
+
         const subTree: VNode = render.call(instance.proxy);//得到一个新的节点;
         patch(instance.subTree, subTree, container, anchor)
         instance.subTree = subTree//将新节点保存到实例上,变成下次更新时的老节点;
+
+        //生命周期钩子-onUpdated-组件实例更新后;
+        if (u) {
+          invokeArrayFns(u)
+        }
       }
     }
 

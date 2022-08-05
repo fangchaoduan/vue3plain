@@ -4,6 +4,21 @@ import { ComponentRender, VNodeChildren, VueComponent } from "vue";
 import { initProps } from "./componentProps";
 import { RenderVNode, VueInstance } from "./renderer";
 
+//`当前执行vue组件实例`;
+export let currentInstance: VueInstance | null = null;
+
+//设置一个vue组件实例为`当前执行vue组件实例`;
+export const setCurrentInstance = (instance: VueInstance | null) => currentInstance = instance
+/* export const setCurrentInstance = (instance: VueInstance|null) => {
+  return currentInstance = instance
+} */
+
+//获取`当前执行vue组件实例`;
+export const getCurrentInstance = () => currentInstance
+/* export const getCurrentInstance = (instance: VueInstance) => {
+  return currentInstance
+} */
+
 //使用VueComponent类型的虚拟节点创建一个vue组件实例;
 export function createComponentInstance(vnode: RenderVNode) {
   const instance: VueInstance = {//组件的实例;
@@ -128,7 +143,14 @@ export function setupComponent(instance: VueInstance) {
       attrs: instance.attrs,
       slots: instance.slots,
     }
+
+    setCurrentInstance(instance)
+    //调用setup()时必定知道当前实例是谁;
+    //而钩子函数需要用到当前实例;
     const setupResult = setup(instance.props, setupContext)
+    setCurrentInstance(null)
+
+
     if (isFunction(setupResult)) {
       instance.render = setupResult as ComponentRender
     } else if (isObject(setupResult)) {

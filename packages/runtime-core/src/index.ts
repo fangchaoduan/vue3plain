@@ -7,3 +7,7 @@ export * from './vnode'
 //'@vue/reactivity'是'/packages/reactivity/'目录打包出来的东西;
 //'@vue/***'是'tsconfig.json'中配置的,用于TypeScript提示;
 export * from '@vue/reactivity'
+
+export * from './apiLifecycle'
+
+export * from './component'

@@ -24,6 +24,13 @@ export const isArray = Array.isArray;
 //把第一个入参设置为原型,并以此原型返回一个新对象;
 export const assign = Object.assign;
 
+//传入一个函数数组,依次执行里面的函数;
+export const invokeArrayFns = (fns: Array<Function>) => {
+  for (let index = 0; index < fns.length; index++) {
+    fns[index]()
+  }
+}
+
 //查看一个属性是否在对象原型上;
 const hasOwnProperty = Object.prototype.hasOwnProperty
 
