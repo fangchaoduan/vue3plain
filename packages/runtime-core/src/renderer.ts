@@ -435,6 +435,7 @@ export function createRenderer(renderOptions: RenderOptions) {
     if (n2.dynamicChildren) {
       // debugger
       //元素之间的优化--靶向更新,只比较动态节点了;
+      console.log("n2.dynamicChildren--->", n2.dynamicChildren);
       patchBlockChildren(n1, n2)
     } else {
       //h1还在这呢;

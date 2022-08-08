@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue组件runtime-dom</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+  </body>
+  <script src="../../../node_modules/vue/dist/vue.global.js"></script>
+  <!-- vue;包含编译; -->
+
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.js"></script> -->
+  <!-- vue内部的运行时模块-开发环境的;组件中this.$attrs是响应式对象;不包含编译; -->
+
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.prod.js"></script> -->
+  <!-- vue内部的运行时模块-生产环境的;组件中this.$attrs不是响应式对象; -->
+
+  <!-- <script src="./runtime-dom.global.js"></script> -->
+  <!-- 自己的运行时模块; -->
+
+  <script>
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+    } = VueRuntimeDOM;
+    const VueComponent = {
+      setup() {
+        const state = reactive({
+          name: "方",
+          claxx: "abc",
+          aaa: "aaa",
+          bbb: "bbb",
+          ccc: "ccc",
+          abc: "abc",
+        });
+        setTimeout(() => {
+          state.aaa = "fang";
+        }, 1000);
+        // const theReturn = {
+        //   ...toRefs(state),
+        // }
+        // console.log('theReturn--->',theReturn)
+        return {
+          ...toRefs(state),
+        };
+      },
+      render(_ctx) {
+        //console.log("_ctx.aaa.value--->", _ctx.aaa.value);
+        //console.log("_ctx--->", _ctx);
+        const vnode =
+          (_openBlock(),
+          _createElementBlock("div", null, [
+            _createElementVNode("span", null, "123213"),
+            _createElementVNode("div", null, _toDisplayString(_ctx.aaa.value), 1),
+            _createElementVNode(
+              "p",
+              {
+                //class: _normalizeClass(_ctx.a),
+              },
+              [
+                _createTextVNode(_toDisplayString(_ctx.abc.value) + " ", 1),
+                _createElementVNode(
+                  "span",
+                  null,
+                  _toDisplayString(_ctx.bbb.value),
+                  1
+                ),
+              ],
+              2
+            ),
+          ]));
+        console.log("vnode--->", vnode);
+        //vnode.dymanicChildren = ["div text",_ctx.abc,span.1,p2];
+        return vnode;
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+    } = Vue;
+    const VueComponent = {
+      setup() {
+        onMounted(() => {
+          const instance = getCurrentInstance();
+          console.log("instance.vnode--->", instance.vnode);
+        });
+
+        const state = reactive({
+          name: "方",
+          claxx: "abc",
+          a: "aaa",
+          bbb: "bbb",
+          ccc: "ccc",
+          abc: "abc",
+          flag: true,
+        });
+        setTimeout(() => {
+          state.aaa = "fang";
+        }, 1000);
+
+        return {
+          ...toRefs(state),
+        };
+      },
+      template: `
+      <div>
+        <p v-if="flag">
+          <span>
+            <a>{{a}}</a>
+          </span>
+        </p>
+        <div v-else>
+          <span>
+            <a>{{a}}</a>
+          </span>
+        </div>
+      </div>`,
+      // render(_ctx) {
+      //   const vnode =
+      //     (_openBlock(),
+      //     _createElementBlock("div", null, [
+      //       _createElementVNode("span", null, "123213"),
+      //       _createElementVNode(
+      //         "div",
+      //         null,
+      //         _toDisplayString(_ctx.aaa.value),
+      //         1
+      //       ),
+      //       _createElementVNode(
+      //         "p",
+      //         {},
+      //         [
+      //           _createTextVNode(_toDisplayString(_ctx.abc.value) + " ", 1),
+      //           _createElementVNode(
+      //             "span",
+      //             null,
+      //             _toDisplayString(_ctx.bbb.value),
+      //             1
+      //           ),
+      //         ],
+      //         2
+      //       ),
+      //     ]));
+      //   console.log("vnode--->", vnode);
+      //   return vnode;
+      // },
+    };
+    render(h(VueComponent), app); */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+      createApp,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+    } = Vue;
+    const VueComponent = {
+      setup() {
+        onMounted(() => {
+          const instance = getCurrentInstance();
+          console.log("instance.vnode--->", instance.vnode);
+        });
+
+        const state = reactive({
+          name: "方",
+          claxx: "abc",
+          a: "aaa",
+          bbb: "bbb",
+          ccc: "ccc",
+          abc: "abc",
+          flag: true,
+        });
+        setTimeout(() => {
+          state.aaa = "fang";
+        }, 1000);
+
+        return {
+          ...toRefs(state),
+        };
+      },
+      template: `
+      <div>
+        <p v-if="flag">
+          <span>
+            <a>{{a}}</a>
+          </span>
+        </p>
+        <div v-else>
+          <span>
+            <a>{{a}}</a>
+          </span>
+        </div>
+      </div>`,
+    };
+    //render(h(VueComponent), app);
+    createApp(VueComponent).mount(app); */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+      createApp,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+    } = Vue;
+    const VueComponent = {
+      setup() {
+        onMounted(() => {
+          const instance = getCurrentInstance();
+          //console.log("instance.vnode--->", instance.vnode);
+        });
+
+        const state = reactive({
+          name: "方",
+          claxx: "abc",
+          a: "aaa",
+          bbb: "bbb",
+          ccc: "ccc",
+          abc: "abc",
+          flag: true,
+        });
+        setTimeout(() => {
+          state.flag = !state.flag;
+        }, 1000);
+
+        return {
+          ...toRefs(state),
+        };
+      },
+      render(_ctx) {
+        const vnode =
+          (_openBlock(),
+          _createElementBlock("div", null, [
+            _ctx.flag
+              ? (_openBlock(),
+                _createElementBlock("p", { key: 0 }, [
+                  _createElementVNode("span", null, [
+                    _createElementVNode("a", null, _toDisplayString(_ctx.a), 1),
+                  ]),
+                ]))
+              : (_openBlock(),
+                _createElementBlock("div", { key: 1 }, [
+                  _createElementVNode("span", null, [
+                    _createElementVNode("a", null, _toDisplayString(_ctx.a), 1),
+                  ]),
+                ])),
+          ]));
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    //render(h(VueComponent), app);
+    createApp(VueComponent).mount(app); */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+      createApp,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+    } = Vue;
+
+    //block的作用是收集动态节点;
+    //block收集动态节点,是以树为单位来收集的; 特点是比较的时候可以只比较动态节点;
+    //之前写的h性能好吗?和写模板那个性能好?
+    //模板的性能更好(模版缺陷在于,书写不灵活);
+    //v-for的时候,如果不增加block,收集的时候会将v-for的所有节点和其它层的节点一起收集起来;
+    const VueComponent = {
+      setup() {
+        onMounted(() => {
+          const instance = getCurrentInstance();
+          //console.log("instance.vnode--->", instance.vnode);
+        });
+
+        const state = reactive({
+          name: "方",
+          claxx: "abc",
+          a: "aaa",
+          bbb: "bbb",
+          ccc: "ccc",
+          abc: "abc",
+          flag: true,
+        });
+        setTimeout(() => {
+          state.flag = !state.flag;
+        }, 1000);
+
+        return {
+          ...toRefs(state),
+        };
+      },
+      render(_ctx) {
+        const vnode =
+          (_openBlock(),
+          _createElementBlock("div", null, [
+            _ctx.flag
+              ? (_openBlock(),
+                _createElementBlock("p", { key: 0 }, [
+                  _createElementVNode("span", null, [
+                    _createElementVNode("a", null, _toDisplayString(_ctx.a), 1),
+                  ]),
+                ]))
+              : (_openBlock(),
+                _createElementBlock("div", { key: 1 }, [
+                  _createElementVNode("span", null, [
+                    _createElementVNode("p", null, [
+                      _createElementVNode(
+                        "a",
+                        null,
+                        _toDisplayString(_ctx.a),
+                        1
+                      ),
+                    ]),
+                  ]),
+                ])),
+          ]));
+        // <div>
+        //   <p v-if="flag">
+        //     <span>
+        //       <a>{{a}}</a>
+        //     </span>
+        //   </p>
+        //   <div v-else>
+        //     <span>
+        //       <p><a>{{a}}</a></p>
+        //     </span>
+        //   </div>
+        // </div>
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    //render(h(VueComponent), app);
+    createApp(VueComponent).mount(app); */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+      createApp,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+      renderList: _renderList,
+    } = Vue;
+
+    //block的作用是收集动态节点;
+    //block收集动态节点,是以树为单位来收集的; 特点是比较的时候可以只比较动态节点;
+    //之前写的h性能好吗?和写模板那个性能好?
+    //模板的性能更好(模版缺陷在于,书写不灵活);
+    //v-for的时候,如果不增加block,收集的时候会将v-for的所有节点和其它层的节点一起收集起来;
+    const VueComponent = {
+      setup() {
+        onMounted(() => {
+          const instance = getCurrentInstance();
+          //console.log("instance.vnode--->", instance.vnode);
+        });
+
+        const state = reactive({
+          name: "方",
+          claxx: "abc",
+          a: "aaa",
+          bbb: "bbb",
+          ccc: "ccc",
+          abc: "abc",
+          flag: true,
+        });
+        setTimeout(() => {
+          state.flag = !state.flag;
+        }, 1000);
+
+        return {
+          ...toRefs(state),
+        };
+      },
+      render(_ctx) {
+        const vnode =
+          (_openBlock(),
+          _createElementBlock("div", null, [
+            (_openBlock(true),
+            _createElementBlock(
+              Fragment,
+              null,
+              _renderList(3, (item) => {
+                return (
+                  _openBlock(),
+                  _createElementBlock("div", null, _toDisplayString(item), 1)
+                );
+              }),
+              256
+            )),
+          ]));
+        // <div>
+        //   <div v-for="item in 3">{{item}}</div>
+        // </div>
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    //render(h(VueComponent), app);
+    createApp(VueComponent).mount(app); */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+      createApp,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+      renderList: _renderList,
+    } = Vue;
+
+    //block的作用是收集动态节点;
+    //block收集动态节点,是以树为单位来收集的; 特点是比较的时候可以只比较动态节点;
+    //之前写的h性能好吗?和写模板那个性能好?
+    //模板的性能更好(模版缺陷在于,书写不灵活);
+    //v-for的时候,如果不增加block,收集的时候会将v-for的所有节点和其它层的节点一起收集起来;
+    const VueComponent = {
+      setup() {
+        onMounted(() => {
+          const instance = getCurrentInstance();
+          //console.log("instance.vnode--->", instance.vnode);
+        });
+
+        const state = reactive({
+          name: "方",
+          claxx: "abc",
+          a: "aaa",
+          bbb: "bbb",
+          ccc: "ccc",
+          abc: "abc",
+          flag: true,
+        });
+        setTimeout(() => {
+          state.flag = !state.flag;
+        }, 1000);
+
+        return {
+          ...toRefs(state),
+        };
+      },
+      render(_ctx) {
+        const vnode =(_openBlock(), _createElementBlock("div", null, [
+          (_openBlock(true), _createElementBlock(Fragment, null, _renderList(fruits, (item) => {
+            return (_openBlock(), _createElementBlock("div", null, _toDisplayString(item), 1 ))
+          }), 256 )),
+          _createTextVNode(" " + _toDisplayString(aaa), 1 )
+        ]));
+        // <div>
+        //   <div v-for="item in fruits">{{item}}</div>
+        //   {{aaa}}
+        // </div>
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    //render(h(VueComponent), app);
+    createApp(VueComponent).mount(app); */
+
+    const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+      createApp,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+      renderList: _renderList,
+    } = Vue;
+
+    //openBlock()中: block的作用是收集动态节点;
+    //block收集动态节点,是以树为单位来收集的; 特点是比较的时候可以只比较动态节点;
+    //之前写的h性能好吗?和写模板那个性能好?
+    //模板的性能更好(模版缺陷在于,书写不灵活);
+    //v-for的时候,如果不增加block,收集的时候会将v-for的所有节点和其它层的节点一起收集起来;
+
+    //所以v-for与v-if会产生额外的block,防止靶向更新出问题;
+    //在block里走传统的更新即可;//主要是减少了block以外的比对;
+    const VueComponent = {
+      setup() {
+        onMounted(() => {
+          const instance = getCurrentInstance();
+          //console.log("instance.vnode--->", instance.vnode);
+        });
+
+        const state = reactive({
+          name: "方",
+          claxx: "abc",
+          a: "aaa",
+          bbb: "bbb",
+          ccc: "ccc",
+          abc: "abc",
+          flag: true,
+        });
+        setTimeout(() => {
+          state.flag = !state.flag;
+        }, 1000);
+
+        return {
+          ...toRefs(state),
+        };
+      },
+      render(_ctx) {
+        const vnode =(_openBlock(), _createElementBlock("div", null, [
+          (_openBlock(true), _createElementBlock(Fragment, null, _renderList(3, (item) => {
+            return (_openBlock(), _createElementBlock("div", null, _toDisplayString(item), 1 ))
+          }), 256 )),
+          _createTextVNode(" " + _toDisplayString(123), 1 )
+        ]));
+        console.log("vnode--->", vnode);
+        return vnode;
+      },
+    };
+    //render(h(VueComponent), app);
+    createApp(VueComponent).mount(app);
+
+
+
+    //模版编译优化,增添了patchFlag来标识那些节点是动态的;
+    //动态节点就是一个block块;
+    //block来收集节点,为不稳定结构如v-for与v-if的也创建block节点,实现blockTree做到靶向更新;
+    //优化: (静态提升-把静态节点抽离出render为独立变量,属性的提升和虚拟节点的提升; 函数的缓存,预解析字符串);
+    //所以在render中,写模板的性能会比直接写h函数更好一些;//(可以手写openBlock,createElementBlock,createTextVnode(),patchFlags作用);
+
+    //vue3中的模板编译原理-下一节;
+  </script>
+</html>
+
+<!-- <div>
+  <span>123213</span>
+  <div>{{aaa}}</div>
+  <p>
+    {{abc}}
+    <span>{{bbb}}</span>
+  </p>
+</div>
+
+稳定的解构:
+div.dymanicChildren = [div,abc,span]
+
+div.dymanicChildren = [div,abc,span] -->
+
+<!-- <div>
+  <span>123213</span>
+  <div>{{aaa}}</div>
+  <p :class="a">
+    {{abc}}
+    <span>{{bbb}}</span>
+  </p>
+</div>
+在[vue模块转成vnode](https://vue-next-template-explorer.netlify.app/)中转成:
+(_openBlock(), _createElementBlock("div", null, [
+  _createElementVNode("span", null, "123213"),
+  _createElementVNode("div", null, _toDisplayString(_ctx.aaa), 1 /* TEXT */),
+  _createElementVNode("p", {
+    class: _normalizeClass(_ctx.a)
+  }, [
+    _createTextVNode(_toDisplayString(_ctx.abc) + " ", 1 /* TEXT */),
+    _createElementVNode("span", null, _toDisplayString(_ctx.bbb), 1 /* TEXT */)
+  ], 2 /* CLASS */)
+])) -->
+
+<!-- <div>
+  <p v-if="flag">
+    <span>{{a}}</span>
+  </p>
+  <div v-else>
+    <span>{{a}}</span>
+  </div>
+</div>
+
+const _Vue = Vue
+return function render(_ctx, _cache, $props, $setup, $data, $options) {
+  with (_ctx) {
+    const { toDisplayString: _toDisplayString, createElementVNode: _createElementVNode, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode } = _Vue
+
+    return (_openBlock(), _createElementBlock("div", null, [
+      flag
+        ? (_openBlock(), _createElementBlock("p", { key: 0 }, [
+            _createElementVNode("span", null, _toDisplayString(a), 1 /* TEXT */)
+          ]))
+        : (_openBlock(), _createElementBlock("div", { key: 1 }, [
+            _createElementVNode("span", null, _toDisplayString(a), 1 /* TEXT */)
+          ]))
+    ]))
+  }
+}
+
+-->
+
+<!-- <div>
+  <p v-if="flag">
+    <span>
+      <a>{{a}}</a>
+    </span>
+  </p>
+  <div v-else>
+    <span>{{a}}</span>
+  </div>
+</div>
+
+const _Vue = Vue
+return function render(_ctx, _cache, $props, $setup, $data, $options) {
+  with (_ctx) {
+    const { toDisplayString: _toDisplayString, createElementVNode: _createElementVNode, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode } = _Vue
+
+    return (_openBlock(), _createElementBlock("div", null, [
+      flag
+        ? (_openBlock(), _createElementBlock("p", { key: 0 }, [
+            _createElementVNode("span", null, [
+              _createElementVNode("a", null, _toDisplayString(a), 1 /* TEXT */)
+            ])
+          ]))
+        : (_openBlock(), _createElementBlock("div", { key: 1 }, [
+            _createElementVNode("span", null, _toDisplayString(a), 1 /* TEXT */)
+          ]))
+    ]))
+  }
+} -->
+
+<!-- <div>
+  <p v-if="flag">
+    <span>
+      <a>{{a}}</a>
+    </span>
+  </p>
+  <div v-else>
+    <span>
+      <a>{{a}}</a>
+    </span>
+  </div>
+</div>
+
+//不稳定结构都要产生block区;
+const _Vue = Vue
+return function render(_ctx, _cache, $props, $setup, $data, $options) {
+  with (_ctx) {
+    const { toDisplayString: _toDisplayString, createElementVNode: _createElementVNode, openBlock: _openBlock, createElementBlock: _createElementBlock, createCommentVNode: _createCommentVNode } = _Vue
+
+    return (_openBlock(), _createElementBlock("div", null, [
+      flag
+        ? (_openBlock(), _createElementBlock("p", { key: 0 }, [
+            _createElementVNode("span", null, [
+              _createElementVNode("a", null, _toDisplayString(a), 1 /* TEXT */)
+            ])
+          ]))
+        : (_openBlock(), _createElementBlock("div", { key: 1 }, [
+            _createElementVNode("span", null, [
+              _createElementVNode("a", null, _toDisplayString(a), 1 /* TEXT */)
+            ])
+          ]))
+    ]))
+  }
+} -->

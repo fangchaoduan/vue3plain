@@ -30,6 +30,7 @@ var VueRuntimeDOM = (() => {
     createElementBlock: () => createElementBlock,
     createElementVNode: () => createVnode,
     createRenderer: () => createRenderer,
+    createTextVNode: () => createTextVNode,
     createVnode: () => createVnode,
     currentInstance: () => currentInstance,
     effect: () => effect,
@@ -462,6 +463,9 @@ var VueRuntimeDOM = (() => {
   function createElementBlock(type, props, children, patchFlag) {
     return setupBlock(createVnode(type, props, children, patchFlag));
   }
+  function createTextVNode(value, patchFlag = 0) {
+    return createVnode(Text, null, String(value), patchFlag);
+  }
   function setupBlock(vnode) {
     vnode.dynamicChildren = currentBlock;
     currentBlock = null;
@@ -829,6 +833,7 @@ var VueRuntimeDOM = (() => {
         }
       }
       if (n2.dynamicChildren) {
+        console.log("n2.dynamicChildren--->", n2.dynamicChildren);
         patchBlockChildren(n1, n2);
       } else {
         patchChildren(n1, n2, el);
@@ -1026,7 +1031,7 @@ var VueRuntimeDOM = (() => {
       parent.insertBefore(child, anchor);
     },
     remove(child) {
-      const parentNode = child.parentNode;
+      const parentNode = child == null ? void 0 : child.parentNode;
       if (parentNode) {
         parentNode.removeChild(child);
       }

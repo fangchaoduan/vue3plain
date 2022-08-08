@@ -118,6 +118,13 @@ export function createElementBlock(type: VNodeType, props: object, children: VNo
   return setupBlock(createVnode(type, props, children, patchFlag))
 }
 
+export function createTextVNode(value: any, patchFlag: PatchFlags = 0): VNode {
+  return createVnode(Text, null, String(value), patchFlag)
+}
+/* export function createTextVNode(text: ' ', flag = 0) { // 创建文本虚拟节点
+  return createVnode(Text, null, text, flag)
+} */
+
 function setupBlock(vnode: VNode): VNode {
   vnode.dynamicChildren = currentBlock
   currentBlock = null

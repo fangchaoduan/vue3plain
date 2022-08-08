@@ -20,7 +20,7 @@ export const nodeOps: NodeOperateOptions = {
 
   //remove-删除节点;
   remove(child: Node) {
-    const parentNode = child.parentNode;
+    const parentNode = child?.parentNode;
     if (parentNode) {
       parentNode.removeChild(child)
     }
