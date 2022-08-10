@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue模版编译</title>
+  </head>
+  <body></body>
+  <script src="./compiler-core.global.js"></script>
+  <script>
+    const { compile } = VueCompilerCore;
+    //const r = compile("123");
+    //解析规则就是一个个字符来进行判断,并且解析一部份就删除一部份,解析完毕后就删除掉;
+    //const r = compile("<div a=1 b =2>123</div>");
+    //const r = compile("<div>123</div>");
+    //const r = compile("abc<a></a>");
+    //const r = compile("abc{{aa}}");
+    //const r = compile("abc");
+    //const r = compile("abc <a></a> {{abc}}");
+    /* //求行:
+    const r = compile(`a
+    
+    
+    bc <a></a> {{abc}}`); */
+    /* //求列:
+    const r = compile(`a
+    bc <a></a> {{abc}}`); */
+    /* const r = compile(`a
+
+    bc <a></a> {{abc}}`); */
+    const r = compile(`{{  abc   }}    `);
+    console.log(r);
+  </script>
+</html>
