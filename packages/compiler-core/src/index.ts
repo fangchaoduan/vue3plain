@@ -272,7 +272,7 @@ function parseAttribute(context: TemplateContext) {
   const value = parseAttributeValue(context)
 
   //debugger
-  const theReturn:ElementProp = {
+  const theReturn: ElementProp = {
     type: NodeTypes.ATTRIBUTE,
     name,
     value: {
@@ -287,7 +287,7 @@ function parseAttribute(context: TemplateContext) {
 }
 //处理多个属性;
 function parseAttributes(context: TemplateContext) {//`a=1 b=2 >`;
-  const props:ElementProp[] = []
+  const props: ElementProp[] = []
 
   //目前不考虑如`<div asdsad=1/>` input这类标签了;
   //无内容时停止循环,初始为`>`时停止循环;
@@ -355,7 +355,9 @@ function parseElement(context: TemplateContext) {
 
   //`</div>`;
   if (context.source.startsWith(`</`)) {
-    parseTag(context)//直接干掉如: `<div></div>`中的`</div>`;
+    //直接干掉如: `<div></div>`中的`</div>`;
+    //其实也有返回的,但没有用到它的返回;
+    parseTag(context)
   }
 
   ele.loc = getSelection(context, ele.loc.start)//计算最新的位置信息;
@@ -376,14 +378,30 @@ function parse(template: string) {
   const context = createParserContext(template)
   //debugger
 
-  return parseChildren(context)
+  //return parseChildren(context)
+
+  const start = getCursor(context)//未解析前的游标;
+  const children = parseChildren(context)//解析当前模板,会改变context;
+  const theLoc = getSelection(context, start)//解析后的位置信息;
+  const node = createRoot(children, theLoc)
+  return node
+}
+
+//给子节点列表包一层根节点-Fragment类型的节点;
+function createRoot(children: ParseNode[], loc: SelectionObject) {
+  const theParseNode: ParseNode = {
+    type: NodeTypes.ROOT,//Fragment;
+    children,
+    loc,
+  }
+  return theParseNode
 }
 
 function parseChildren(context: TemplateContext) {
   //< 元素;
   //{{}} 说明表达式;
   //其它就是文本;
-  //目前不考虑其它;
+  //目前不考虑其它;如动态指令,动态事件,动态指令之类的目前不考虑;
   const nodes: ParseNode[] = []
   while (!isEnd(context)) {
     const source = context.source
@@ -405,7 +423,7 @@ function parseChildren(context: TemplateContext) {
 
     //文本;
     //暂时不考虑其它,如注释之类的;
-    if (!node) {
+    if (!node) {//`  {{aa}}  aaa {{bbb}}  `
       node = parseText(context)
       //break
     }
@@ -415,7 +433,24 @@ function parseChildren(context: TemplateContext) {
   }
   //console.log(nodes)
 
-  return nodes
+  //去除为全为空格之类的文本节点;
+  nodes.forEach((item, index) => {
+    if (item.type === NodeTypes.TEXT) {
+      //const theRegExp = /^\t\r\n\f /;//个人感觉不太对;
+      // debugger
+      const theRegExp = /^[\t\r\n\f ]{1,}$/;
+      //个人觉得`!/[^\t\r\n\f ]/.test(item.content as string)`不太好记,它的意思是`非 拥有除空格之外其它字符的 字符串`;
+      if (theRegExp.test(item.content as string)) {
+        nodes[index] = null
+      }
+    }
+  })
+
+  const theReturn = nodes.filter(Boolean)
+  //Boolean是一个函数;Boolean(vaue)=>boolean;
+  //相当于`nodes.filter(Boolean)` -> `nodes.filter(Boolean(item))` -> `nodes.filter((item)=>Boolean(item))` -> `nodes.filter((item)=>{return Boolean(item)})`;
+
+  return theReturn
 }
 
 export function compile(template: string) {

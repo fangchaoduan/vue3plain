@@ -216,7 +216,19 @@ var VueCompilerCore = (() => {
   }
   function parse(template) {
     const context = createParserContext(template);
-    return parseChildren(context);
+    const start = getCursor(context);
+    const children = parseChildren(context);
+    const theLoc = getSelection(context, start);
+    const node = createRoot(children, theLoc);
+    return node;
+  }
+  function createRoot(children, loc) {
+    const theParseNode = {
+      type: 0 /* ROOT */,
+      children,
+      loc
+    };
+    return theParseNode;
   }
   function parseChildren(context) {
     const nodes = [];
@@ -233,7 +245,16 @@ var VueCompilerCore = (() => {
       }
       nodes.push(node);
     }
-    return nodes;
+    nodes.forEach((item, index) => {
+      if (item.type === 2 /* TEXT */) {
+        const theRegExp = /^[\t\r\n\f ]{1,}$/;
+        if (theRegExp.test(item.content)) {
+          nodes[index] = null;
+        }
+      }
+    });
+    const theReturn = nodes.filter(Boolean);
+    return theReturn;
   }
   function compile(template) {
     const ast = parse(template);

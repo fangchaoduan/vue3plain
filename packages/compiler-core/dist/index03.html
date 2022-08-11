@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue模版编译</title>
+  </head>
+  <body></body>
+  <script src="./compiler-core.global.js"></script>
+  <script>
+    const { compile } = VueCompilerCore;
+    //解析规则就是一个个字符来进行判断,并且解析一部份就删除一部份,解析完毕后就删除掉;
+    //const r = compile(`<div/>`);//自闭合标签;
+    //const r = compile(`<div></div>`);//闭合标签;
+    //const r = compile(`<div>123</div>`);//有子节点的闭合标签;
+    //const r = compile(`<div>123{{abc}}</div>`);//有两个子节点的闭合标签;
+    //const r = compile(`<div>123 {{abc}} <span></span></div>`);//有个子标签的闭合标签;
+    //const r = compile(`<div>123 {{abc}} <span>{{aaa}}</span></div>`);//有子孙节点的闭合标签;
+    //const r = compile(`<div><div></div></div>`);//div套div的闭合标签;
+    //const r = compile(`<div a=1></div>`); //有属性但属性没引号的标签;//由于没做这个情况的考虑的,所以结果不对;
+    //const r = compile(`<div a="1"></div>`);//一个属性;
+    const r = compile(`<div a="1" b="2"></div>`);//两个属性;
+    console.log(r);
+
+    //单属性的 如disabeld`不考虑先; 考虑`a=1`这种;
+  </script>
+</html>
