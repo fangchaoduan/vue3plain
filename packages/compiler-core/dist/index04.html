@@ -11,7 +11,15 @@
   <script>
     const { compile } = VueCompilerCore;
     //解析规则就是一个个字符来进行判断,并且解析一部份就删除一部份,解析完毕后就删除掉;
-    const r = compile(`<div>{{aaa}} 123</div>`);//正常点的空白;
+    //const r = compile(`<div></div><div></div>`);//多个根节点;
+    //const r = compile(`<div></div> `);//元素后有空格;
+    // const r = compile(`<div>  </div> `);//元素内也有空格;
+    //const r = compile(`<div>  </div> 123 `);//元素内也有空格;
+    /* const r = compile(`<div>  </div>
+    
+    
+    `);//直接回车也算空白; */
+    const r = compile(`<div>  </div>`);//正常点的空白;
     console.log(r);
 
     //单属性的 如disabeld`不考虑先; 考虑`a=1`这种;
