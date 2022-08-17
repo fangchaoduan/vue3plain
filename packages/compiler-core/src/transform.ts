@@ -1,15 +1,16 @@
-import { NodeTypes } from "./ast";
+import { createVnodeCall, NodeTypes } from "./ast";
 import { ParseNode } from "./parse";
-import { TO_DISPLAY_STRING } from "./runtimeHelpers";
-import { transformElement } from "./transforms/transformElement";
+import { CREATE_ELEMENT_BLOCK, CREATE_ELEMENT_VNODE, FRAGMENT, OPEN_BLOCK, TO_DISPLAY_STRING } from "./runtimeHelpers";
+import { ElementCodegenNode, transformElement } from "./transforms/transformElement";
 import { transformExpression } from "./transforms/transformExpression";
 import { transformText } from "./transforms/transformText";
 
 export type TransformContext = {
   currentnode: ParseNode;//当前正在转化的是谁;
   parent: any;//当前转化的父节点是谁;
-  helpers: Map<any, any>;//记录:使用了多少次那些如`createTextVnode()`之类的方法;//用于优化如: 超过20个相同节点会被字符串化;
-  helper(name: any): any;
+  helpers: Map<symbol, number>;//记录:使用了多少次那些如`createTextVnode()`之类的方法;//用于优化如: 超过20个相同节点会被字符串化;
+  helper(name: symbol): symbol;
+  removeHelper(name: symbol): any;
   nodeTransforms: ((node: ParseNode, context: TransformContext) => void | Function)[];
 }
 function createTransformContext(root: ParseNode) {
@@ -25,8 +26,20 @@ function createTransformContext(root: ParseNode) {
       return name
     },
 
+    removeHelper(name) {
+      const count = context.helpers.get(name)
+      if (count) {
+        const currentCount = count - 1;
+        if (!currentCount) {
+          context.helpers.delete(name)
+        } else {
+          context.helpers.set(name, currentCount)
+        }
+      }
+    },
+
     nodeTransforms: [
-      transformElement,
+      transformElement,//转化元素 返回exit-->转化文本 返回exit -> 执行转化文本exit--> 执行转化元素exit;
       transformText,
       transformExpression,
     ]
@@ -62,19 +75,53 @@ function traverse(node: ParseNode, context: TransformContext) {
       //如果有子节点,再遍历子节点;
       for (let i = 0; i < node.children.length; i++) {
         context.parent = node
-        traverse(node.children[i], context)
+        traverse(node.children[i] as ParseNode, context)
       }
   }
 
   context.currentnode = node;//当执行退出函数的时候,保存currentNode指向依旧是对的;
   let i = exitsFns.length
-  while (i--) {
+  while (i--) {//与transforms[i](node, context)相反,后进先执行;
     exitsFns[i]()
+  }
+}
+
+//对根节点如果有两个子节点,则包一层;
+function createRootCodegen(ast: ParseNode, context: TransformContext) {
+  const { children } = ast
+  if (children.length === 1) {
+    const child = children[0]
+    //如果是元素,还有可能就是一个文本;
+    if (child.type === NodeTypes.ELEMENT && child.codegenNode) {
+      ast.codegenNode = child.codegenNode
+
+      //不再调用createElementVnode;//调用的是openBlock createElementBlock;
+      context.removeHelper(CREATE_ELEMENT_VNODE);
+      context.helper(OPEN_BLOCK);
+      context.helper(CREATE_ELEMENT_BLOCK);
+
+      ; (ast.codegenNode as ElementCodegenNode).isBlock = true;//只有一个元素,那么当前元素是一个block节点,并且使用的是createElementBlock;
+
+
+    } else {
+      ast.codegenNode = child.codegenNode
+    }
+  } else {
+    ast.codegenNode = createVnodeCall(context, context.helper(FRAGMENT), null, children)
+    context.helper(OPEN_BLOCK);
+    context.helper(CREATE_ELEMENT_BLOCK);
+    ast.codegenNode.isBlock = true;
   }
 }
 export function transform(ast: ParseNode) {
   //对树进行遍历操作;
   const context = createTransformContext(ast)
   traverse(ast, context)
+
+  createRootCodegen(ast, context)
+  ast.helpers = [...context.helpers.keys()]
+  // console.log('ast.helpers--->', ast.helpers)
+
+  //根据此ast生成代码 靶向更新;
 
 }

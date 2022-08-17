@@ -1,6 +1,9 @@
 //主要是把template中的代码编译成render()函数-render()函数中VNode的是用模版来写的,而不是h()函数生成的;
 
+import { PatchFlags } from "@vue/shared";
 import { NodeTypes } from "./ast";
+import { ElementCodegenNode } from "./transforms/transformElement";
+import { TextCodegenNode } from "./transforms/transformText";
 
 /* type TemplateContext = {
   line: number;//第几行;
@@ -123,9 +126,11 @@ export type ParseNode = {
   content?: string | ParseNode;//节点内容;
   tag?: string;//标签类型;
   isSelfClosing?: boolean;//是否标签自闭合;
-  children?: ParseNode[],//儿子节点;
+  children?: ParseNode[],//儿子节点;//在COMPOUND_EXPRESSION时,string是用于拼接的;
   props?: ElementProp[],//属性;
-  loc: SelectionObject;//位置信息;
+  loc?: SelectionObject;//位置信息;//在COMPOUND_EXPRESSION时,没有loc?
+  codegenNode?: TextCodegenNode | ElementCodegenNode,
+  helpers?: symbol[];
 }
 
 function parseText(context: TemplateContext) {
@@ -293,6 +298,7 @@ function parseAttributes(context: TemplateContext) {//`a=1 b=2 >`;
   //无内容时停止循环,初始为`>`时停止循环;
   while (context.source.length > 0 && !context.source.startsWith(`>`) && !context.source.startsWith(`/>`)) {
     const prop = parseAttribute(context)
+    //debugger
     props.push(prop)
     advanceBySpaces(context)
   }

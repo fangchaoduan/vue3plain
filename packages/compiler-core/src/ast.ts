@@ -1,3 +1,10 @@
+import { PatchFlags } from "@vue/shared";
+import { ParseNode } from "./parse";
+import { CREATE_ELEMENT_VNODE, CREATE_TEXT } from "./runtimeHelpers";
+import { TransformContext } from "./transform";
+import { ChildrenNode, ElementCodegenNode, PropertyObject, PropsExpression } from "./transforms/transformElement";
+import { TextCodegenNode } from "./transforms/transformText";
+
 //ast语法树相关type;
 export const enum NodeTypes {
   ROOT, // 根节点 Fragment;
@@ -18,4 +25,35 @@ export const enum NodeTypes {
   VNODE_CALL,//元素调用;
   JS_CALL_EXPRESSION,//js调用表达式;
   //还有很多,这里没写完;
+  JS_OBJECT_EXPRESSION,
 }
+
+export function createCallExpression(context: TransformContext, args: (string | ParseNode | PatchFlags)[]): TextCodegenNode {
+  const callee = context.helper(CREATE_TEXT)
+  return {
+    callee,
+    type: NodeTypes.JS_CALL_EXPRESSION,
+    arguments: args,
+  }
+}
+
+export function createObjectExpression(properties: PropertyObject[]): PropsExpression {
+  return {
+    type: NodeTypes.JS_OBJECT_EXPRESSION,
+    properties,
+  }
+}
+
+export function createVnodeCall(context: TransformContext, vnodeTag: string | symbol, propsExpressio: PropsExpression, childrenNode: ChildrenNode): ElementCodegenNode {
+  context.helper(CREATE_ELEMENT_VNODE)
+  // console.log('context.helpers--->', context.helpers)
+  return {
+    type: NodeTypes.VNODE_CALL,
+    tag: vnodeTag,
+    props: propsExpressio,
+    children: childrenNode
+  }
+}
+
+//TEXT_CALL -> 文本的意思; JS_CALL_EXPRESSION 调用文本表达式;
+//VNODE_CALL -> 元素; JS_OBJECT_EXPRESSION属性;
