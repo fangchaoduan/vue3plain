@@ -120,7 +120,7 @@ function getSelection(context: TemplateContext, start: CursorObject, end?: Curso
   }
   return theReturn
 }
-
+export type CodegenNode = TextCodegenNode | ElementCodegenNode | ParseNode
 export type ParseNode = {
   type: NodeTypes;//节点类型;
   content?: string | ParseNode;//节点内容;
@@ -129,7 +129,7 @@ export type ParseNode = {
   children?: ParseNode[],//儿子节点;//在COMPOUND_EXPRESSION时,string是用于拼接的;
   props?: ElementProp[],//属性;
   loc?: SelectionObject;//位置信息;//在COMPOUND_EXPRESSION时,没有loc?
-  codegenNode?: TextCodegenNode | ElementCodegenNode,
+  codegenNode?: CodegenNode,
   helpers?: symbol[];
 }
 

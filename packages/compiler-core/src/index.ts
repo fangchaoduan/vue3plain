@@ -1,3 +1,4 @@
+import { generate } from "./generate";
 import { parse } from "./parse";
 import { transform } from "./transform";
 
@@ -18,12 +19,12 @@ export function compile(template: string) {
 
 
   //console.log('ast--->', ast)
-  return ast
+  // return ast
   //对ast语法树进行一些预先处理;
   // transform(ast);//会生成一些信息;
 
   //代码生成;
-  // return generate(ast);//最终生成代码;和vue2的过程一样;
+  return generate(ast);//最终生成代码;和vue2的过程一样;
 }
 
 //`openBlock + (_)` 这一类实际上就是手动拼字符串;

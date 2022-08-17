@@ -104,9 +104,14 @@ function createRootCodegen(ast: ParseNode, context: TransformContext) {
 
 
     } else {
-      ast.codegenNode = child.codegenNode
+      ast.codegenNode = child
     }
   } else {
+    if (children.length === 0) {
+      //为空时,比如空字符串?
+      return
+    }
+
     ast.codegenNode = createVnodeCall(context, context.helper(FRAGMENT), null, children)
     context.helper(OPEN_BLOCK);
     context.helper(CREATE_ELEMENT_BLOCK);
