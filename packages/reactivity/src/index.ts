@@ -12,3 +12,6 @@ export * from './ref'
 
 export * from './effect'
 //使其在别的地方可以使用通过"@vue/reactivity"使用'./effect.ts'中导出的方法或变量;
+
+//effectScope相关方法;
+export * from './effectScope'

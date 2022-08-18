@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>测试effectScope</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+  </body>
+  <script src="../../../node_modules/vue/dist/vue.global.js"></script>
+  <!-- 这里是vue本体,一般公共可访问比较稳定的api都放这里; -->
+
+  <script src="./reactivity.global.js"></script>
+  <!-- 这里引用的是自己的包; -->
+
+  <script>
+    /* const { ref, effect, reactive, toRefs, toRef, proxyRefs } = VueReactivity; //reactive支持一个对象类型;
+
+    const state = reactive({ name: "方一" });
+    const runner = effect(() => {
+      console.log("state.name--->", state.name);
+    });
+
+    runner.effect.stop();
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //runner.effect.stop()只能停止收集某一个effect;
+    const { ref, effect, reactive, toRefs, toRef, proxyRefs } = Vue; //reactive支持一个对象类型;
+
+    const state = reactive({ name: "方一" });
+    const runner = effect(() => {
+      console.log("state.name--->", state.name);
+    });
+
+    runner.effect.stop();
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //多个effect,想中断;
+    const { ref, effect, reactive, toRefs, toRef, proxyRefs } = Vue; //reactive支持一个对象类型;
+
+    const state = reactive({ name: "方一" });
+    const runner1 = effect(() => {
+      console.log("state.name--->", state.name);
+    });
+    const runner2 = effect(() => {
+      console.log("state.name--->", state.name);
+    });
+
+    runner1.effect.stop();
+    runner2.effect.stop();
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //effectScope用法;
+    const { ref, effect, reactive, toRefs, toRef, proxyRefs, effectScope } = Vue; //reactive支持一个对象类型;
+
+    const state = reactive({ name: "方一" });
+
+    const scope = effectScope();//得到一个作用域;
+    //运行作用域,作用域可以批量收集effect;
+    //用于`状态集中管理,全部停止掉`;
+    //effectScope 需要收集对应effect(依赖收集);
+    scope.run(() => {
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+    });
+    scope.stop();//停止作用域中的effect收集;
+
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //自己的;
+    const { ref, effect, reactive, toRefs, toRef, proxyRefs, effectScope } = Vue;
+
+    const state = reactive({ name: "方一" });
+
+    const scope = effectScope();//得到一个作用域;
+    //运行作用域,作用域可以批量收集effect;
+    //用于`状态集中管理,全部停止掉`;
+    //effectScope 需要收集对应effect(依赖收集);
+    scope.run(() => {
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+    });
+    scope.stop();//停止作用域中的effect收集;
+
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //effectScope有返回值;
+    const { ref, effect, reactive, toRefs, toRef, proxyRefs, effectScope } = Vue;
+
+    const state = reactive({ name: "方一" });
+
+    const scope = effectScope();
+    scope.run(() => {
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      return 100;
+    });
+    scope.stop();
+
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //自己的;
+    const { ref, effect, reactive, toRefs, toRef, proxyRefs, effectScope } = Vue;
+
+    const state = reactive({ name: "方一" });
+
+    const scope = effectScope();//得到一个作用域;
+    //运行作用域,作用域可以批量收集effect;
+    //用于`状态集中管理,全部停止掉`;
+    //effectScope 需要收集对应effect(依赖收集);
+    scope.run(() => {
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+    });
+    scope.stop();//停止作用域中的effect收集;
+
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //嵌套effectScope;
+    const { ref, effect, reactive, toRefs, toRef, proxyRefs, effectScope } =
+      Vue;
+
+    const state = reactive({ name: "方一" });
+
+    const scope = effectScope();
+    scope.run(() => {
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+
+      scope.run(() => {
+        effect(() => {
+          console.log("state.name--->", state.name);
+        });
+        effect(() => {
+          console.log("state.name--->", state.name);
+        });
+      });
+
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+    });
+    scope.stop();
+
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //嵌套effectScope;
+    const { ref, effect, reactive, toRefs, toRef, proxyRefs, effectScope } =
+      Vue;
+
+    const state = reactive({ name: "方一" });
+
+    const scope = effectScope();
+    scope.run(() => {
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+    });
+    scope.stop();
+
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //嵌套effectScope,自己的;
+    const { effect, reactive, effectScope } = VueReactivity;
+
+    const state = reactive({ name: "方一" });
+
+    const scope = effectScope();
+    scope.run(() => {
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+    });
+    scope.stop();
+
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //自己的;
+    const { effect, reactive, effectScope } = VueReactivity;
+
+    const state = reactive({ name: "方一" });
+
+    const scope = effectScope();
+    scope.run(() => {
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("state.name--->", state.name);
+      });
+    });
+
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //effectScope嵌套effectScope;
+    const { effect, reactive, effectScope } = Vue;
+    const state = reactive({ name: "方一" });
+    const scope = effectScope();
+    scope.run(() => {
+      effect(() => {
+        console.log("outer的state.name--->", state.name);
+      });
+      const innerScope = effectScope(true);
+      innerScope.run(() => {
+        effect(() => {
+          console.log("inner的state.name--->", state.name);
+        });
+      });
+      innerScope.stop();
+    });
+    // scope.stop();
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    /* //effectScope嵌套effectScope,自己的;
+    const { effect, reactive, effectScope } = VueReactivity;
+    const state = reactive({ name: "方一" });
+    const scope = effectScope();
+    scope.run(() => {
+      effect(() => {
+        console.log("outer的state.name--->", state.name);
+      });
+      //const innerScope = effectScope(true);
+      const innerScope = effectScope(false);
+      // const innerScope = effectScope();
+      innerScope.run(() => {
+        effect(() => {
+          console.log("inner的state.name--->", state.name);
+        });
+      });
+      // innerScope.stop();
+    });
+    scope.stop();
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000); */
+
+    //effectScope嵌套effectScope,自己的;
+    const { effect, reactive, effectScope } = VueReactivity;
+    const state = reactive({ name: "方一" });
+    const scope = effectScope();
+    scope.run(() => {
+      const runner = effect(() => {
+        console.log("outer的state.name--->", state.name);
+      });
+      effect(() => {
+        console.log("outer的state.name--->", state.name);
+      });
+      runner.effect.stop();
+
+      // const innerScope = effectScope(false);
+      // innerScope.run(() => {
+      //   effect(() => {
+      //     console.log("inner的state.name--->", state.name);
+      //   });
+      // });
+    });
+    // scope.stop();
+    setTimeout(() => {
+      state.name = "方二";
+    }, 1000);
+  </script>
+</html>

@@ -1,3 +1,6 @@
+import { recordEffectScope } from "./effectScope";
+
+
 export let activeEffect: ReactiveEffect | undefined = undefined;
 
 //停止effect的收集;
@@ -26,6 +29,8 @@ export class ReactiveEffect {
   //这里表示在实例上新增了active属性;
   public active: boolean = true;//effect的激活状态;默认是激活状态;
   constructor(public fn: Function, public scheduler?: Function | undefined) {//用户传递的参数也会放在this上,相当于this.fn=fn;
+
+    recordEffectScope(this)//effectScope()方法用到,用于将当前effect放到一个作用域里;
   }
   //run就是执行effect;
   run(): unknown {

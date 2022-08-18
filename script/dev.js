@@ -7,7 +7,7 @@ const { resolve } = require("path");
 
 const { build } = require("esbuild");
 
-const target = args._[0] || reactivity;
+const target = args._[0] || 'reactivity';
 const format = args.f || "global";
 //开发环境只打包某一个;
 const pkg = require(resolve(__dirname, `../packages/${target}/package.json`));
