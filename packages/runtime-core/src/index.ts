@@ -8,6 +8,11 @@ export * from './vnode'
 //'@vue/***'是'tsconfig.json'中配置的,用于TypeScript提示;
 export * from '@vue/reactivity'
 
+//生命周期相关api;
 export * from './apiLifecycle'
 
+//Vue组件相关api;
 export * from './component'
+
+//依赖注入相关api;
+export * from './apiInject'

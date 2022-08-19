@@ -25,6 +25,7 @@ var VueRuntimeDOM = (() => {
     ReactiveEffect: () => ReactiveEffect,
     Text: () => Text,
     activeEffect: () => activeEffect,
+    activeEffectScope: () => activeEffectScope,
     computed: () => computed,
     createComponentInstance: () => createComponentInstance,
     createElementBlock: () => createElementBlock,
@@ -34,8 +35,10 @@ var VueRuntimeDOM = (() => {
     createVnode: () => createVnode,
     currentInstance: () => currentInstance,
     effect: () => effect,
+    effectScope: () => effectScope,
     getCurrentInstance: () => getCurrentInstance,
     h: () => h,
+    inject: () => inject,
     isSameVnode: () => isSameVnode,
     isVnode: () => isVnode,
     onBeforeMount: () => onBeforeMount,
@@ -43,8 +46,10 @@ var VueRuntimeDOM = (() => {
     onMounted: () => onMounted,
     onUpdated: () => onUpdated,
     openBlock: () => openBlock,
+    provide: () => provide,
     proxyRefs: () => proxyRefs,
     reactive: () => reactive,
+    recordEffectScope: () => recordEffectScope,
     ref: () => ref,
     render: () => render,
     setCurrentInstance: () => setCurrentInstance,
@@ -81,6 +86,50 @@ var VueRuntimeDOM = (() => {
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (value, key) => hasOwnProperty.call(value, key);
 
+  // packages/reactivity/src/effectScope.ts
+  var activeEffectScope = null;
+  var EffectScope = class {
+    constructor(detached) {
+      this.active = true;
+      this.parent = null;
+      this.effects = [];
+      this.scopes = [];
+      if (!detached && activeEffectScope) {
+        activeEffectScope.scopes.push(this);
+      }
+    }
+    run(fn) {
+      if (this.active) {
+        try {
+          this.parent = activeEffectScope;
+          activeEffectScope = this;
+          return fn();
+        } finally {
+          activeEffectScope = this.parent;
+        }
+      }
+    }
+    stop() {
+      if (this.active) {
+        for (let i = 0; i < this.effects.length; i++) {
+          this.effects[i].stop();
+        }
+        for (let i = 0; i < this.scopes.length; i++) {
+          this.scopes[i].stop();
+        }
+        this.active = false;
+      }
+    }
+  };
+  function recordEffectScope(effect2) {
+    if (activeEffectScope && activeEffectScope.active) {
+      activeEffectScope.effects.push(effect2);
+    }
+  }
+  function effectScope(detached = false) {
+    return new EffectScope(detached);
+  }
+
   // packages/reactivity/src/effect.ts
   var activeEffect = void 0;
   function cleanupEffect(effect2) {
@@ -97,6 +146,7 @@ var VueRuntimeDOM = (() => {
       this.parent = null;
       this.deps = [];
       this.active = true;
+      recordEffectScope(this);
     }
     run() {
       if (!this.active) {
@@ -544,8 +594,10 @@ var VueRuntimeDOM = (() => {
   var currentInstance = null;
   var setCurrentInstance = (instance) => currentInstance = instance;
   var getCurrentInstance = () => currentInstance;
-  function createComponentInstance(vnode) {
+  function createComponentInstance(vnode, parent) {
     const instance = {
+      provides: parent ? parent.provides : /* @__PURE__ */ Object.create(null),
+      parent,
       data: null,
       vnode,
       subTree: null,
@@ -659,13 +711,13 @@ var VueRuntimeDOM = (() => {
       }
       return child[index];
     };
-    const mountChildren = (children, container) => {
+    const mountChildren = (children, container, parentComponent) => {
       for (let index = 0; index < (children == null ? void 0 : children.length); index++) {
         const child = normalize(children, index);
-        patch(null, child, container);
+        patch(null, child, container, null, parentComponent);
       }
     };
-    const mountElement = (vnode, container, anchor = null) => {
+    const mountElement = (vnode, container, anchor = null, parentComponent) => {
       const { type, props, children, shapeFlag } = vnode;
       vnode.el = hostCreateElement(type);
       const el = vnode.el;
@@ -677,7 +729,7 @@ var VueRuntimeDOM = (() => {
       if (shapeFlag & 8 /* TEXT_CHILDREN */) {
         hostSetElementText(el, children);
       } else if (shapeFlag & 16 /* ARRAY_CHILDREN */) {
-        mountChildren(children, el);
+        mountChildren(children, el, parentComponent);
       }
       hostInsert(el, container, anchor);
     };
@@ -780,7 +832,7 @@ var VueRuntimeDOM = (() => {
         }
       }
     };
-    const patchChildren = (n1, n2, el) => {
+    const patchChildren = (n1, n2, el, parentComponent) => {
       const c1 = (n1 == null ? void 0 : n1.children) || null;
       const c2 = (n2 == null ? void 0 : n2.children) || null;
       const prevShapeFlag = n1.shapeFlag;
@@ -804,17 +856,17 @@ var VueRuntimeDOM = (() => {
             hostSetElementText(el, "");
           }
           if (shapeFlag & 16 /* ARRAY_CHILDREN */) {
-            mountChildren(c2, el);
+            mountChildren(c2, el, parentComponent);
           }
         }
       }
     };
-    const patchBlockChildren = (n1, n2) => {
+    const patchBlockChildren = (n1, n2, parentComponent) => {
       for (let i = 0; i < n2.dynamicChildren.length; i++) {
-        patchElement(n1.dynamicChildren[i], n2.dynamicChildren[i]);
+        patchElement(n1.dynamicChildren[i], n2.dynamicChildren[i], parentComponent);
       }
     };
-    const patchElement = (n1, n2) => {
+    const patchElement = (n1, n2, parentComponent) => {
       var _a;
       const el = n2.el = n1.el;
       const oldProps = n1.props || {};
@@ -834,37 +886,37 @@ var VueRuntimeDOM = (() => {
       }
       if (n2.dynamicChildren) {
         console.log("n2.dynamicChildren--->", n2.dynamicChildren);
-        patchBlockChildren(n1, n2);
+        patchBlockChildren(n1, n2, parentComponent);
       } else {
-        patchChildren(n1, n2, el);
+        patchChildren(n1, n2, el, parentComponent);
       }
     };
-    const processElement = (n1, n2, container, anchor = null) => {
+    const processElement = (n1, n2, container, anchor = null, parentComponent) => {
       if (n1 === null) {
-        mountElement(n2, container, anchor);
+        mountElement(n2, container, anchor, parentComponent);
       } else {
-        patchElement(n1, n2);
+        patchElement(n1, n2, parentComponent);
       }
     };
-    const processFragment = (n1, n2, container) => {
+    const processFragment = (n1, n2, container, parentComponent) => {
       var _a;
       if (n1 === null || n1 === void 0) {
         if (!isArray(n2.children)) {
           console.log("\u4E0D\u662F\u6570\u7EC4,\u76F4\u63A5\u9000\u51FA\u6302\u8F7D");
           return;
         }
-        mountChildren(n2.children, container);
+        mountChildren(n2.children, container, parentComponent);
       } else {
         if (isArray(n2.children)) {
           for (let index = 0; index < ((_a = n2.children) == null ? void 0 : _a.length); index++) {
             n2.children[index] = normalize(n2.children, index);
           }
         }
-        patchChildren(n1, n2, container);
+        patchChildren(n1, n2, container, parentComponent);
       }
     };
-    const mountComponent = (vnode, container, anchor = null) => {
-      const instance = vnode.component = createComponentInstance(vnode);
+    const mountComponent = (vnode, container, anchor = null, parentComponent) => {
+      const instance = vnode.component = createComponentInstance(vnode, parentComponent);
       setupComponent(instance);
       setupRenderEffect(instance, container, anchor);
     };
@@ -882,7 +934,7 @@ var VueRuntimeDOM = (() => {
             invokeArrayFns(bm);
           }
           const subTree = render3.call(instance.proxy, instance.proxy);
-          patch(null, subTree, container, anchor);
+          patch(null, subTree, container, anchor, instance);
           if (m) {
             invokeArrayFns(m);
           }
@@ -898,7 +950,7 @@ var VueRuntimeDOM = (() => {
             invokeArrayFns(bu);
           }
           const subTree = render3.call(instance.proxy, instance.proxy);
-          patch(instance.subTree, subTree, container, anchor);
+          patch(instance.subTree, subTree, container, anchor, instance);
           instance.subTree = subTree;
           if (u) {
             invokeArrayFns(u);
@@ -927,14 +979,14 @@ var VueRuntimeDOM = (() => {
         instance.update();
       }
     };
-    const processComponent = (n1, n2, container, anchor = null) => {
+    const processComponent = (n1, n2, container, anchor = null, parentComponent) => {
       if (n1 === null) {
-        mountComponent(n2, container, anchor);
+        mountComponent(n2, container, anchor, parentComponent);
       } else {
         updateComponent(n1, n2);
       }
     };
-    const patch = (n1, n2, container, anchor = null) => {
+    const patch = (n1, n2, container, anchor = null, parentComponent = null) => {
       if (n1 === n2) {
         return;
       }
@@ -948,13 +1000,13 @@ var VueRuntimeDOM = (() => {
           processText(n1, n2, container);
           break;
         case Fragment:
-          processFragment(n1, n2, container);
+          processFragment(n1, n2, container, parentComponent);
           break;
         default:
           if (shapeFlag & 1 /* ELEMENT */) {
-            processElement(n1, n2, container, anchor);
+            processElement(n1, n2, container, anchor, parentComponent);
           } else if (shapeFlag & 6 /* COMPONENT */) {
-            processComponent(n1, n2, container, anchor);
+            processComponent(n1, n2, container, anchor, parentComponent);
           }
           break;
       }
@@ -1024,6 +1076,34 @@ var VueRuntimeDOM = (() => {
   var onMounted = createHook("m" /* MOUNTED */);
   var onBeforeUpdate = createHook("bu" /* BEFORE_UPDATE */);
   var onUpdated = createHook("u" /* UPDATED */);
+
+  // packages/runtime-core/src/apiInject.ts
+  function provide(key, value) {
+    if (!currentInstance) {
+      return;
+    }
+    const parentProvides = currentInstance.parent && currentInstance.parent.provides;
+    let provides = currentInstance.provides;
+    if (parentProvides === provides) {
+      provides = currentInstance.provides = Object.create(provides);
+    }
+    provides[key] = value;
+  }
+  function inject(key, defaultValue) {
+    if (!currentInstance) {
+      return;
+    }
+    const provides = currentInstance.parent && currentInstance.parent.provides;
+    if (provides && key in provides) {
+      return provides[key];
+    } else if (arguments.length > 1) {
+      let theReturn = defaultValue;
+      if (typeof defaultValue === "function") {
+        theReturn = defaultValue();
+      }
+      return theReturn;
+    }
+  }
 
   // packages/runtime-dom/src/nodeOps.ts
   var nodeOps = {

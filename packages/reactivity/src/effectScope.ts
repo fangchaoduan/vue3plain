@@ -8,6 +8,8 @@ import { ReactiveEffect } from "./effect";
 //`父EffectScope实例`.stop() -> `父ReactiveEffect实例`.stop() 和 `子EffectScope实例`.stop() -> `子ReactiveEffect实例`.stop();
 //父effectScope.stop() 停止自己家的effect 执行子effectScope.stop() 同时停止自己的effect;
 
+//以前vue3.2之前可以自己收集 子集做stop;//即用一个数组把effect收集起来,遍历做effect的stop()或run();
+
 export let activeEffectScope: EffectScope = null;//`当前EffectScope实例`;
 
 //EffectScope类;

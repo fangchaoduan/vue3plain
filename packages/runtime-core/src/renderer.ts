@@ -22,6 +22,8 @@ type RenderContainer = HTMLElement & {
 };
 
 export type VueInstance = {//组件的实例;
+  provides:object;//该组件的依赖;//所有组件用的都是父组件的provides;
+  parent: null | VueInstance;//父组件;
   data: null | object;//实例的状态;
   vnode: VNode;  //vue2的源码中组件的虚拟节点叫$vnode,渲染的内容叫_vnode;//vue3中的虚拟节点就叫vnode;
   subTree: VNode | null;//vnode:组件的虚拟节点; subTree:渲染的组件内容,即render返回的虚拟节点或模板编译出来的虚拟节点?
@@ -80,11 +82,11 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   /* //挂载子节点列表到容器上;
   //根据`虚拟节点列表children`循环对比新旧虚拟节点,并创建出`虚拟节点对应真实DOM`,把`虚拟节点对应真实DOM`挂载到虚拟节点上,同时把`虚拟节点对应真实DOM`挂载到容器上; */
-  const mountChildren = (children: Array<ConvertibleVNode>, container: HTMLElement) => {
+  const mountChildren = (children: Array<ConvertibleVNode>, container: HTMLElement, parentComponent: null | VueInstance) => {
     for (let index = 0; index < children?.length; index++) {
       //debugger
       const child = normalize(children, index)//处理后要进行替换,否则children中存放的依旧是字符串;
-      patch(null, child, container)
+      patch(null, child, container, null, parentComponent)
     }
   }
 
@@ -92,7 +94,7 @@ export function createRenderer(renderOptions: RenderOptions) {
   //1.先创建`虚拟节点type对应DOM元素`,同时将`虚拟节点type对应DOM元素`挂载到`虚拟节点`上;
   //2.再用`虚拟节点props`在`虚拟节点type对应DOM元素`上创建`DOM元素各项属性`;
   //3.再用`虚拟节点children`在`虚拟节点type对应DOM元素`上创建`DOM元素子元素`; */
-  const mountElement = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
+  const mountElement = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance) => {
     const { type, props, children, shapeFlag } = vnode
 
     //先创建父元素,并挂载到vnode上;
@@ -112,7 +114,7 @@ export function createRenderer(renderOptions: RenderOptions) {
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {//数组;
       //这里代表子节点是一个数组;
       //debugger
-      mountChildren(children as ConvertibleVNode[], el)
+      mountChildren(children as ConvertibleVNode[], el, parentComponent)
     }
 
     //处理完之后,把整个元素丢到容器里;
@@ -311,7 +313,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   //全量比较虚拟节点的子节点列表;
   //比较两个虚拟节点的子节点的差异,el就是当前两个虚拟节点对应的真实DOM元素;
-  const patchChildren = (n1: RenderVNode, n2: RenderVNode, el: HTMLElement) => {
+  const patchChildren = (n1: RenderVNode, n2: RenderVNode, el: HTMLElement, parentComponent: null | VueInstance) => {
     const c1 = n1?.children || null//旧虚拟节点的子节点列表;
     const c2 = n2?.children || null//新虚拟节点的子节点列表;
 
@@ -377,7 +379,7 @@ export function createRenderer(renderOptions: RenderOptions) {
         }
 
         if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {//判断新虚拟节点为数组;
-          mountChildren(c2 as ConvertibleVNode[], el)
+          mountChildren(c2 as ConvertibleVNode[], el, parentComponent)
         }
 
       }
@@ -385,16 +387,17 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   }
 
-  const patchBlockChildren = (n1: RenderVNode, n2: RenderVNode) => {
+  //靶向更新;
+  const patchBlockChildren = (n1: RenderVNode, n2: RenderVNode, parentComponent: null | VueInstance) => {
     for (let i = 0; i < n2.dynamicChildren.length; i++) {
       //之前是树的递归比较,现在是数组的比较;
-      patchElement(n1.dynamicChildren[i], n2.dynamicChildren[i])
+      patchElement(n1.dynamicChildren[i], n2.dynamicChildren[i], parentComponent)
     }
   }
 
   //用于进行虚拟节点为HTML元素的比对;
   //如果元素一样: 先复用节点,再比较属性,再比较儿子(子节点);
-  const patchElement = (n1: RenderVNode, n2: RenderVNode) => {
+  const patchElement = (n1: RenderVNode, n2: RenderVNode, parentComponent: null | VueInstance) => {
     //复用节点;
     const el = n2.el = n1.el as HTMLElement //这个方法内的el,必定为元素;
 
@@ -436,34 +439,34 @@ export function createRenderer(renderOptions: RenderOptions) {
       // debugger
       //元素之间的优化--靶向更新,只比较动态节点了;
       console.log("n2.dynamicChildren--->", n2.dynamicChildren);
-      patchBlockChildren(n1, n2)
+      patchBlockChildren(n1, n2, parentComponent)
     } else {
       //h1还在这呢;
-      patchChildren(n1, n2, el)
+      patchChildren(n1, n2, el, parentComponent)
     }
 
   }
 
   //处理元素:
-  const processElement = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
+  const processElement = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance) => {
     //旧节点n1为null,就创建新节点并插入到容器上;
     if (n1 === null) {
-      mountElement(n2, container, anchor)
+      mountElement(n2, container, anchor, parentComponent)
     } else {
       //元素比对;
-      patchElement(n1, n2);
+      patchElement(n1, n2, parentComponent);
     }
 
   }
 
   //处理空标签;
-  const processFragment = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer) => {
+  const processFragment = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, parentComponent: null | VueInstance) => {
     if (n1 === null || n1 === undefined) {
       if (!isArray(n2.children)) {
         console.log("不是数组,直接退出挂载");
         return
       }
-      mountChildren(n2.children, container)//走的是新增,直接把子节点挂载到容器中;
+      mountChildren(n2.children, container, parentComponent)//走的是新增,直接把子节点挂载到容器中;
     } else {
       //走的是比对,比对新旧虚拟节点的子节点列表;
 
@@ -475,16 +478,16 @@ export function createRenderer(renderOptions: RenderOptions) {
         }
       }
 
-      patchChildren(n1, n2, container)//走的是diff算法;
+      patchChildren(n1, n2, container, parentComponent)//走的是diff算法;
     }
   }
 
 
 
   //把vue组件挂载到容器上;
-  const mountComponent = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
+  const mountComponent = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance) => {
     //1) 要创造一个组件的实例;
-    const instance = vnode.component = createComponentInstance(vnode)
+    const instance = vnode.component = createComponentInstance(vnode, parentComponent)
     //2) 给实例上赋值并进行代理;
     setupComponent(instance)
     //3) 根据vue组件实例创建一个effect,并赋值到vue组件实例上;
@@ -513,7 +516,7 @@ export function createRenderer(renderOptions: RenderOptions) {
         }
 
         const subTree: VNode = render.call(instance.proxy, instance.proxy);//得到一个虚拟节点;//作为this,后续this会改;
-        patch(null, subTree, container, anchor)//创造了subTree的真实节点并且插入了容器;
+        patch(null, subTree, container, anchor, instance)//创造了subTree的真实节点并且插入了容器;
 
         //生命周期钩子-onMounted-组件实例挂载后;
         if (m) {
@@ -540,7 +543,7 @@ export function createRenderer(renderOptions: RenderOptions) {
         }
 
         const subTree: VNode = render.call(instance.proxy, instance.proxy);//得到一个新的节点;
-        patch(instance.subTree, subTree, container, anchor)
+        patch(instance.subTree, subTree, container, anchor, instance)
         instance.subTree = subTree//将新节点保存到实例上,变成下次更新时的老节点;
 
         //生命周期钩子-onUpdated-组件实例更新后;
@@ -592,46 +595,30 @@ export function createRenderer(renderOptions: RenderOptions) {
     }
   }
   //处理组件;
-  const processComponent = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {//统一处理组件,里面再区分是普通的还是函数式组件;
+  const processComponent = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance) => {//统一处理组件,里面再区分是普通的还是函数式组件;
     //不过函数式组件已经不建议使用了;[函数式组件-vue官方文档](https://v3.cn.vuejs.org/guide/migration/functional-components.html#函数式组件);
 
     if (n1 === null) {
-      mountComponent(n2, container, anchor)//组件的挂载;
+      mountComponent(n2, container, anchor, parentComponent)//组件的挂载;
     } else {
       //组件更新靠的是props;
       updateComponent(n1, n2)
     }
 
   }
+
+  //div -> My; //A -> Fragment -> My;
   //对比新旧虚拟节点,并创建出`虚拟节点对应真实DOM`,把`虚拟节点对应真实DOM`挂载到虚拟节点上,同时把`虚拟节点对应真实DOM`挂载到容器上;
-  const patch = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
-    /* //核心的patch方法;
-      //对比新旧虚拟节点:
-      //若新旧节点一致,就直接退出;
-      //若新旧节点不一致;
-      //若新节点元素类型为文本,那么用processText()创建文本节点进行处理;
-      //若新节点元素类型不为文本,那么用processElement()创建对应元素进行处理;
-  
-      //n2如果代表数字,那么应该为`h(Text, '文本')`而不是`h('文本')或h(undefined,'文本')`;
-      //也就是说,文本只会出现在`h('h1', {}, [h('span', '文本'),'文本二'])`中的第三个参数中;
-      //而`h()第三个参数`的处理一定会经过`mountChildren()`这个函数;
-      //`mountChildren()`内部调用`normalize()`把字符串转成类型为symbol的VNode;
-     */
-
-
+  const patch = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance = null) => {
     //新旧节点完全一致;
     if (n1 === n2) {
       return
     }
-
-    //旧节点存在,但新旧节点元素类型不一致;
-    //判断两个节点是否相同,不相同就卸载再添加;
-    //debugger
+    //旧节点存在,但新旧节点元素类型不一致;//判断两个节点是否相同,不相同就卸载再添加;
     if (n1 && !isSameVnode(n1, n2)) {
       unmount(n1)//删除老的;
       n1 = null;//旧节点置为null,再走后续的新增流程;
     }
-
 
     //虚拟节点类型为元素时比对: 元素类型,元素属性,元素子节点;
     //虚拟节点类型为文本时比对: 文本内部(其实就是元素子节点);
@@ -641,17 +628,16 @@ export function createRenderer(renderOptions: RenderOptions) {
       case Text://文本的标签;
         processText(n1, n2, container)
         break;
-
       case Fragment://无用的标签;
-        processFragment(n1, n2, container)
+        processFragment(n1, n2, container, parentComponent)
         break
       default: //元素的标签;
         if (shapeFlag & ShapeFlags.ELEMENT) {
           //debugger
-          processElement(n1, n2, container, anchor)
+          processElement(n1, n2, container, anchor, parentComponent)
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
           //文档一般只能在会的时候看,不会的时候很难看懂;
-          processComponent(n1, n2, container, anchor)
+          processComponent(n1, n2, container, anchor, parentComponent)
         }
         break
     }

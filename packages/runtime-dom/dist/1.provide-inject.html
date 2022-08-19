@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue组件runtime-dom</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+  </body>
+  <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+  <!-- vue;包含编译; -->
+
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script> -->
+  <!-- vue内部的运行时模块-开发环境的;组件中this.$attrs是响应式对象;不包含编译; -->
+
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist//runtime-dom.global.prod.js"></script> -->
+  <!-- vue内部的运行时模块-生产环境的;组件中this.$attrs不是响应式对象; -->
+
+  <script src="./runtime-dom.global.js"></script>
+  <!-- 自己的运行时模块; -->
+
+  <script>
+    /* //provide和inject就是为了实现跨级通信;在组件库中,想跨级通信, 那么一般就是采用的provide/inject;
+    //比如element-ui里vue2.0中:
+    //el-configm //provide属性;
+      //el-form //provide属性;
+        //el-form-item;
+          //el-input //inject属性;
+     */
+
+    /* const {
+      createRenderer,
+      h,
+      render,
+      Text,
+      Fragment,
+      reactive,
+      toRefs,
+      ref,
+      computed,
+      createApp,
+
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+      createTextVNode: _createTextVNode,
+      renderList: _renderList,
+
+      provide,
+      inject,
+    } = VueRuntimeDOM;
+
+    //provide和inject就是为了实现跨级通信;在组件库中,想跨级通信, 那么一般就是采用的provide/inject;
+
+    //broadcast dispatch 老版本用的这个 在vue1.0中;
+    const My = {
+      setup() {
+        const state = inject("VueComponent");
+        return { state };
+      },
+      render() {
+        return h(`h1`, this.state.name);
+      },
+    };
+    const VueComponent = {
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+        setTimeout(() => {
+          state.name = "方";
+        }, 1000);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //子改父:
+    const { h, render, reactive, provide, inject } = VueRuntimeDOM;
+    const My = {
+      setup() {
+        const state = inject("VueComponent");//虽然允许子改父的数据,但这里最好只是注入进来用,不要改动源数据;//真想改,可以注入一个方法,子节点通过调用这个方法间接去改父节点的数据;
+        setTimeout(() => {
+          console.log(`子改父`);
+          state.name = "方";
+        }, 1000);
+        return { state };
+      },
+      render() {
+        return h(`h1`, this.state.name);
+      },
+    };
+    const VueComponent = {
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //如何实现的?使用的情况只能是 父 -> 子 -> 孙子 -> 曾孙;
+    //实现原理是在父组件上增加了一个provides属性,当调用provide时候会向属性中存值;
+    //在渲染子组件的时候,子会将父的provides放到自己的身上;
+
+    //provide和inject只能在setup中使用;
+    const { h, render, reactive, provide, inject } = VueRuntimeDOM;
+    const My = {
+      setup() {
+        const state = inject("VueComponent"); //虽然允许子改父的数据,但这里最好只是注入进来用,不要改动源数据;
+        return { state };
+      },
+      render() {
+        return h(`h1`, this.state.name);
+      },
+    };
+    const VueComponent = {
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //如何实现的?使用的情况只能是 父 -> 子 -> 孙子 -> 曾孙;
+    //实现原理是在父组件上增加了一个provides属性,当调用provide时候会向属性中存值;
+    //在渲染子组件的时候,子会将父的provides放到自己的身上;
+    //所有的compositionAPI都要以setup()为入口;
+    //provide和inject只能在setup中使用;
+    const { h, render, reactive, provide, inject } = VueRuntimeDOM;
+    const My = {
+      setup() {
+        const state = inject("VueComponent"); //虽然允许子改父的数据,但这里最好只是注入进来用,不要改动源数据;
+        return { state };
+      },
+      render() {
+        return h(`h1`, this.state.name);
+      },
+    };
+    provide("VueComponent", "a"); //provide和inject只能在setup中使用;
+    const VueComponent = {
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //自己组件查看父节点;
+    const { h, render, reactive, provide, inject, getCurrentInstance } =
+      VueRuntimeDOM;
+    const My = {
+      setup() {
+        // const state = inject("VueComponent");
+        const instance = getCurrentInstance();
+        console.log("instance.parent--->", instance.parent);
+        return {
+          //state,
+        };
+      },
+      render() {
+        //return h(`h1`, this.state.name);
+        return h(`h1`);
+      },
+    };
+    const VueComponent = {
+      name: "parent",
+      setup() {
+        const state = reactive({ name: "zf" });
+        // provide("VueComponent", state);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //自己的;
+    const { h, render, reactive, provide, inject, getCurrentInstance } =
+      VueRuntimeDOM;
+    const My = {
+      setup() {
+        const state = inject("VueComponent");
+        const instance = getCurrentInstance();
+        console.log("instance.parent--->", instance.parent);
+        return {
+          state,
+        };
+      },
+      render() {
+        return h(`h1`, this.state.name);
+      },
+    };
+    const VueComponent = {
+      name: "parent",
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+        setTimeout(() => {
+          state.name = '方'
+        }, 1000);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //inject()默认值;
+    const { h, render, reactive, provide, inject, getCurrentInstance } =
+      VueRuntimeDOM;
+    const My = {
+      setup() {
+        const state = inject("VueComponent");
+        const age = inject("age", 13);
+        const instance = getCurrentInstance();
+        // console.log("instance.parent--->", instance.parent);
+        return {
+          state,
+          age,
+        };
+      },
+      render() {
+        return h(`h1`, this.state.name + this.age);
+      },
+    };
+    const VueComponent = {
+      name: "parent",
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+        setTimeout(() => {
+          state.name = "方";
+        }, 1000);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //断点看provides原型链;
+    const { h, render, reactive, provide, inject, getCurrentInstance } =
+      VueRuntimeDOM;
+    const My = {
+      setup() {
+        provide('my',123)
+        const state = inject("VueComponent");
+        const instance = getCurrentInstance();
+        return {
+          state,
+        };
+      },
+      render() {
+        return h(`h1`, this.state.name);
+      },
+    };
+    const VueComponent = {
+      name: "parent",
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+        setTimeout(() => {
+          state.name = "方";
+        }, 1000);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //断点看provides原型链;
+    const { h, render, reactive, provide, inject, getCurrentInstance } =
+      VueRuntimeDOM;
+    const My = {
+      setup() {
+        provide('my',123)
+        const state = inject("VueComponent");
+        const instance = getCurrentInstance();
+        return {
+          state,
+        };
+      },
+      render() {
+        return h(`h1`, this.state.name);
+      },
+    };
+    const VueComponent = {
+      name: "parent",
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+        provide('my','456')
+        setTimeout(() => {
+          state.name = "方";
+        }, 1000);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); */
+
+
+    //inject()默认值;
+    const { h, render, reactive, provide, inject, getCurrentInstance } =
+      VueRuntimeDOM;
+    const My = {
+      setup() {
+        const state = inject("VueComponent");
+        const age = inject("age", 13);
+        // const age = inject("age", ()=>123);//这种实际上也可以,但没特意去写;可以通过判断是不是函数,进而决定是否调用;
+        const instance = getCurrentInstance();
+        // console.log("instance.parent--->", instance.parent);
+        return {
+          state,
+          age,
+        };
+      },
+      render() {
+        return h(`h1`, this.state.name + this.age);
+      },
+    };
+    const VueComponent = {
+      name: "parent",
+      setup() {
+        const state = reactive({ name: "zf" });
+        provide("VueComponent", state);
+        setTimeout(() => {
+          state.name = "方";
+        }, 1000);
+      },
+      render() {
+        return h(My);
+      },
+    };
+    render(h(VueComponent), app); 
+  </script>
+</html>

@@ -20,8 +20,11 @@ export const getCurrentInstance = () => currentInstance
 } */
 
 //使用VueComponent类型的虚拟节点创建一个vue组件实例;
-export function createComponentInstance(vnode: RenderVNode) {
+export function createComponentInstance(vnode: RenderVNode, parent: null | VueInstance) {
+  //parent: {} -> child: {} -> grandson: {} ;
   const instance: VueInstance = {//组件的实例;
+    provides: parent ? parent.provides : Object.create(null),//所有的组件用的都是父亲的provides;
+    parent,
     data: null,
     vnode,
     subTree: null,
