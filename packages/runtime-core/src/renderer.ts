@@ -8,6 +8,7 @@ import { queueJob } from "./scheduler";
 import { hasPropsChanged, initProps, updateProps } from "./componentProps";
 import { createComponentInstance, setupComponent } from "./component";
 import { LifecycleHooks } from "./apiLifecycle";
+import { TeleportComponent } from "./components/Teleport";
 
 
 export type RenderOptions = NodeOperateOptions & {
@@ -17,12 +18,12 @@ export type RenderOptions = NodeOperateOptions & {
 export type RenderVNode = null | undefined | VNode & {
   component?: null | undefined | VueInstance;
 }
-type RenderContainer = HTMLElement & {
+export type RenderContainer = HTMLElement & {
   _vnode?: null | undefined | RenderVNode;
 };
 
 export type VueInstance = {//组件的实例;
-  provides:object;//该组件的依赖;//所有组件用的都是父组件的provides;
+  provides: object;//该组件的依赖;//所有组件用的都是父组件的provides;
   parent: null | VueInstance;//父组件;
   data: null | object;//实例的状态;
   vnode: VNode;  //vue2的源码中组件的虚拟节点叫$vnode,渲染的内容叫_vnode;//vue3中的虚拟节点就叫vnode;
@@ -40,6 +41,9 @@ export type VueInstance = {//组件的实例;
 } & {
     [lifecycle in LifecycleHooks]?: Array<Function>;//组件生命周期钩子函数;
   };
+
+
+export type RenderAnchor = HTMLElement | Text | null | undefined
 
 export function createRenderer(renderOptions: RenderOptions) {
   const {
@@ -82,7 +86,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   /* //挂载子节点列表到容器上;
   //根据`虚拟节点列表children`循环对比新旧虚拟节点,并创建出`虚拟节点对应真实DOM`,把`虚拟节点对应真实DOM`挂载到虚拟节点上,同时把`虚拟节点对应真实DOM`挂载到容器上; */
-  const mountChildren = (children: Array<ConvertibleVNode>, container: HTMLElement, parentComponent: null | VueInstance) => {
+  const mountChildren = (children: Array<ConvertibleVNode>, container: HTMLElement, parentComponent: null | VueInstance = null) => {
     for (let index = 0; index < children?.length; index++) {
       //debugger
       const child = normalize(children, index)//处理后要进行替换,否则children中存放的依旧是字符串;
@@ -94,7 +98,7 @@ export function createRenderer(renderOptions: RenderOptions) {
   //1.先创建`虚拟节点type对应DOM元素`,同时将`虚拟节点type对应DOM元素`挂载到`虚拟节点`上;
   //2.再用`虚拟节点props`在`虚拟节点type对应DOM元素`上创建`DOM元素各项属性`;
   //3.再用`虚拟节点children`在`虚拟节点type对应DOM元素`上创建`DOM元素子元素`; */
-  const mountElement = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance) => {
+  const mountElement = (vnode: RenderVNode, container: RenderContainer, anchor: RenderAnchor = null, parentComponent: null | VueInstance) => {
     const { type, props, children, shapeFlag } = vnode
 
     //先创建父元素,并挂载到vnode上;
@@ -313,7 +317,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   //全量比较虚拟节点的子节点列表;
   //比较两个虚拟节点的子节点的差异,el就是当前两个虚拟节点对应的真实DOM元素;
-  const patchChildren = (n1: RenderVNode, n2: RenderVNode, el: HTMLElement, parentComponent: null | VueInstance) => {
+  const patchChildren = (n1: RenderVNode, n2: RenderVNode, el: HTMLElement, parentComponent: null | VueInstance = null) => {
     const c1 = n1?.children || null//旧虚拟节点的子节点列表;
     const c2 = n2?.children || null//新虚拟节点的子节点列表;
 
@@ -448,7 +452,7 @@ export function createRenderer(renderOptions: RenderOptions) {
   }
 
   //处理元素:
-  const processElement = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance) => {
+  const processElement = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: RenderAnchor = null, parentComponent: null | VueInstance) => {
     //旧节点n1为null,就创建新节点并插入到容器上;
     if (n1 === null) {
       mountElement(n2, container, anchor, parentComponent)
@@ -485,7 +489,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
 
   //把vue组件挂载到容器上;
-  const mountComponent = (vnode: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance) => {
+  const mountComponent = (vnode: RenderVNode, container: RenderContainer, anchor: RenderAnchor = null, parentComponent: null | VueInstance) => {
     //1) 要创造一个组件的实例;
     const instance = vnode.component = createComponentInstance(vnode, parentComponent)
     //2) 给实例上赋值并进行代理;
@@ -502,7 +506,7 @@ export function createRenderer(renderOptions: RenderOptions) {
   }
 
   //根据vue组件实例创建一个effect,并赋值到vue组件实例上;//effect中将创建一个虚拟节点,并将虚拟节点挂载到容器上;
-  const setupRenderEffect = (instance: VueInstance, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null) => {
+  const setupRenderEffect = (instance: VueInstance, container: RenderContainer, anchor: RenderAnchor = null) => {
     const { render } = instance
     const componentUpdateFn = () => {//区分是初始化,还是要更新;
       //console.log('instance--->', instance)
@@ -595,7 +599,7 @@ export function createRenderer(renderOptions: RenderOptions) {
     }
   }
   //处理组件;
-  const processComponent = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance) => {//统一处理组件,里面再区分是普通的还是函数式组件;
+  const processComponent = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: RenderAnchor = null, parentComponent: null | VueInstance) => {//统一处理组件,里面再区分是普通的还是函数式组件;
     //不过函数式组件已经不建议使用了;[函数式组件-vue官方文档](https://v3.cn.vuejs.org/guide/migration/functional-components.html#函数式组件);
 
     if (n1 === null) {
@@ -607,9 +611,11 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   }
 
+
+
   //div -> My; //A -> Fragment -> My;
   //对比新旧虚拟节点,并创建出`虚拟节点对应真实DOM`,把`虚拟节点对应真实DOM`挂载到虚拟节点上,同时把`虚拟节点对应真实DOM`挂载到容器上;
-  const patch = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: HTMLElement | Text | null | undefined = null, parentComponent: null | VueInstance = null) => {
+  const patch = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: RenderAnchor = null, parentComponent: null | VueInstance = null) => {
     //新旧节点完全一致;
     if (n1 === n2) {
       return
@@ -638,6 +644,16 @@ export function createRenderer(renderOptions: RenderOptions) {
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
           //文档一般只能在会的时候看,不会的时候很难看懂;
           processComponent(n1, n2, container, anchor, parentComponent)
+        } else if (shapeFlag & ShapeFlags.TELEPORT) {
+          // debugger
+          (type as TeleportComponent).process(n1, n2, container, anchor, {
+            mountChildren,
+            patchChildren,
+            move(vnode: RenderVNode, container: Element) {
+              hostInsert(vnode.component ? vnode.component.subTree.el : vnode.el, container, anchor)
+            }
+            //... 其它方法;
+          })
         }
         break
     }

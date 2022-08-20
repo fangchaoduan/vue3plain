@@ -23,6 +23,7 @@ var VueRuntimeDOM = (() => {
     Fragment: () => Fragment,
     LifecycleHooks: () => LifecycleHooks,
     ReactiveEffect: () => ReactiveEffect,
+    Teleport: () => TeleportImpl,
     Text: () => Text,
     activeEffect: () => activeEffect,
     activeEffectScope: () => activeEffectScope,
@@ -468,6 +469,36 @@ var VueRuntimeDOM = (() => {
     return result;
   }
 
+  // packages/runtime-core/src/components/Teleport.ts
+  var TeleportImpl = {
+    __isTeleport: true,
+    process(n1, n2, container, anchor = null, internals) {
+      var _a;
+      for (let index = 0; index < ((_a = n2.children) == null ? void 0 : _a.length); index++) {
+        if (isString(n2.children[index]) || isNumber(n2.children[index])) {
+          const vnode = createVnode(Text, null, String(n2.children[index]));
+          n2.children[index] = vnode;
+        }
+      }
+      const { mountChildren, patchChildren, move } = internals;
+      if (!n1) {
+        const target = document.querySelector(n2.props.to);
+        if (target) {
+          mountChildren(n2.children, target);
+        }
+      } else {
+        patchChildren(n1, n2, container);
+        if (n2.props.to !== n1.props.to) {
+          const nextTarget = document.querySelector(n2.props.to);
+          n2.children.forEach((child) => {
+            move(child, nextTarget);
+          });
+        }
+      }
+    }
+  };
+  var isTeleport = (type) => type.__isTeleport;
+
   // packages/runtime-core/src/vnode.ts
   var Text = Symbol("Text");
   var Fragment = Symbol("Fragment");
@@ -478,7 +509,7 @@ var VueRuntimeDOM = (() => {
     return n1.type === n2.type && n1.key === n2.key;
   }
   function createVnode(type, props, children = null, patchFlag = 0) {
-    let shapeFlag = isString(type) ? 1 /* ELEMENT */ : isObject(type) ? 4 /* STATEFUL_COMPONENT */ : 0;
+    let shapeFlag = isString(type) ? 1 /* ELEMENT */ : isTeleport(type) ? 64 /* TELEPORT */ : isObject(type) ? 4 /* STATEFUL_COMPONENT */ : 0;
     const vnode = {
       type,
       props,
@@ -711,7 +742,7 @@ var VueRuntimeDOM = (() => {
       }
       return child[index];
     };
-    const mountChildren = (children, container, parentComponent) => {
+    const mountChildren = (children, container, parentComponent = null) => {
       for (let index = 0; index < (children == null ? void 0 : children.length); index++) {
         const child = normalize(children, index);
         patch(null, child, container, null, parentComponent);
@@ -832,7 +863,7 @@ var VueRuntimeDOM = (() => {
         }
       }
     };
-    const patchChildren = (n1, n2, el, parentComponent) => {
+    const patchChildren = (n1, n2, el, parentComponent = null) => {
       const c1 = (n1 == null ? void 0 : n1.children) || null;
       const c2 = (n2 == null ? void 0 : n2.children) || null;
       const prevShapeFlag = n1.shapeFlag;
@@ -1007,6 +1038,14 @@ var VueRuntimeDOM = (() => {
             processElement(n1, n2, container, anchor, parentComponent);
           } else if (shapeFlag & 6 /* COMPONENT */) {
             processComponent(n1, n2, container, anchor, parentComponent);
+          } else if (shapeFlag & 64 /* TELEPORT */) {
+            type.process(n1, n2, container, anchor, {
+              mountChildren,
+              patchChildren,
+              move(vnode, container2) {
+                hostInsert(vnode.component ? vnode.component.subTree.el : vnode.el, container2, anchor);
+              }
+            });
           }
           break;
       }

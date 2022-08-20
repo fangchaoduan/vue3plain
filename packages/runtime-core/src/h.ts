@@ -27,7 +27,7 @@ import { createVnode, isVnode, VNode, VNodeChildren, VNodeProps } from "./vnode"
 
 
 
-export function h(type: string, propsChildren: VNodeProps | VNodeChildren, children: VNodeChildren): VNode {//其实的除了3个之外的肯定是孩子(子节点);
+export function h(type: string, propsChildren: VNodeProps | VNodeChildren, children?: VNodeChildren): VNode {//其实的除了3个之外的肯定是孩子(子节点);
   const theLength = arguments.length
 
 

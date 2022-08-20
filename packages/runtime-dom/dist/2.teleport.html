@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue组件runtime-dom</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <div id="root"></div>
+    <div id="abc"></div>
+  </body>
+  <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+  <!-- vue;包含编译; -->
+
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script> -->
+  <!-- vue内部的运行时模块-开发环境的;组件中this.$attrs是响应式对象;不包含编译; -->
+
+  <script src="./runtime-dom.global.js"></script>
+  <!-- 自己的运行时模块; -->
+
+  <script>
+    /* //传送门测试使用;
+    const { h, render, reactive, Teleport } = VueRuntimeDOM;
+    const VueComponent = {
+      render() {
+        return h("div", h(Teleport, { to: "#root" }, [123, 456, 789]));
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //传送门更新;
+    const { h, render, ref, reactive, Teleport } = VueRuntimeDOM;
+    const VueComponent = {
+      setup() {
+        const flag = ref(true);
+        const handleClick = () => {
+          flag.value = false;
+        };
+        return {
+          flag,
+          handleClick,
+        };
+      },
+      render() {
+        return h(
+          "button",
+          { onClick: this.handleClick },
+          this.flag
+            ? h(Teleport, { to: "#root" }, [123, 456, 789])
+            : h(Teleport, { to: "#abc" }, [123, 456, 789])
+        );
+      },
+    };
+    render(h(VueComponent), app); */
+
+    /* //传送门更新,把数字改成文本节点;
+    const { h, render, ref, reactive, Text, Teleport } = VueRuntimeDOM;
+    const VueComponent = {
+      setup() {
+        const flag = ref(true);
+        const handleClick = () => {
+          flag.value = false;
+        };
+        return {
+          flag,
+          handleClick,
+        };
+      },
+      render() {
+        return h(
+          "button",
+          { onClick: this.handleClick },
+          this.flag
+            ? h(Teleport, { to: "#root" }, [h(Text, 4456)])
+            : h(Teleport, { to: "#abc" }, [h(Text, 123)])
+        );
+      },
+    };
+    render(h(VueComponent), app); */
+
+    //;
+    const { h, render, ref, reactive, Text, Teleport } = VueRuntimeDOM;
+    const VueComponent = {
+      setup() {
+        const flag = ref(true);
+        const handleClick = () => {
+          flag.value = false;
+        };
+        return {
+          flag,
+          handleClick,
+        };
+      },
+      render() {
+        return h(
+          "button",
+          { onClick: this.handleClick },
+          this.flag
+            ? h(Teleport, { to: "#root" }, [h(Text, 4456)])
+            : h(Teleport, { to: "#abc" }, [h(Text, 123),h(Text, 789),])
+        );
+      },
+    };
+    render(h(VueComponent), app);
+  </script>
+</html>
