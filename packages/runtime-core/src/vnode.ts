@@ -1,6 +1,6 @@
 //type,即节点类型;props,属性;children,子节点;
 
-import { isArray, isObject, isString, PatchFlags, ShapeFlags } from "@vue/shared";
+import { isArray, isFunction, isObject, isString, PatchFlags, ShapeFlags } from "@vue/shared";
 import { isTeleport, TeleportComponent } from "./components/Teleport";
 
 
@@ -29,7 +29,7 @@ export type VueComponent = {
 }
 
 //虚拟节点的type类型;
-export type VNodeType = string | Symbol | VueComponent | TeleportComponent
+export type VNodeType = string | Symbol | VueComponent | TeleportComponent | (() => VNode)
 
 //虚拟节点的props类型;
 export declare type VNodeProps = undefined | null | {
@@ -65,7 +65,8 @@ export function createVnode(type: VNodeType, props: VNodeProps, children: VNodeC
   // debugger
   let shapeFlag = isString(type) ? ShapeFlags.ELEMENT :
     isTeleport(type) ? ShapeFlags.TELEPORT ://针对不同的类型增添shapeFlag;
-      isObject(type) ? ShapeFlags.STATEFUL_COMPONENT : 0;
+      isFunction(type) ? ShapeFlags.FUNCTIONAL_COMPONENT :
+        isObject(type) ? ShapeFlags.STATEFUL_COMPONENT : 0;
 
   //虚拟DOM就是一个对象,用于diff算法等的优化;真实DOM的属性比较多;
   const vnode: VNode = {//key;

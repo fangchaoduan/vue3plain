@@ -6,7 +6,7 @@ import { getSequence } from "./sequence";
 import { ComponentRender, ConvertibleVNode, createVnode, Fragment, isSameVnode, Text, VNode, VNodeChildren, VueComponent } from "./vnode"
 import { queueJob } from "./scheduler";
 import { hasPropsChanged, initProps, updateProps } from "./componentProps";
-import { createComponentInstance, setupComponent } from "./component";
+import { createComponentInstance, renderComponent, setupComponent } from "./component";
 import { LifecycleHooks } from "./apiLifecycle";
 import { TeleportComponent } from "./components/Teleport";
 
@@ -507,7 +507,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
   //根据vue组件实例创建一个effect,并赋值到vue组件实例上;//effect中将创建一个虚拟节点,并将虚拟节点挂载到容器上;
   const setupRenderEffect = (instance: VueInstance, container: RenderContainer, anchor: RenderAnchor = null) => {
-    const { render } = instance
+    const { render, vnode } = instance
     const componentUpdateFn = () => {//区分是初始化,还是要更新;
       //console.log('instance--->', instance)
       if (!instance.isMounted) {
@@ -519,7 +519,8 @@ export function createRenderer(renderOptions: RenderOptions) {
           invokeArrayFns(bm)
         }
 
-        const subTree: VNode = render.call(instance.proxy, instance.proxy);//得到一个虚拟节点;//作为this,后续this会改;
+        //const subTree: VNode = render.call(instance.proxy, instance.proxy);//得到一个虚拟节点;//作为this,后续this会改;
+        const subTree: VNode = renderComponent(instance);//得到一个虚拟节点;//作为this,后续this会改;
         patch(null, subTree, container, anchor, instance)//创造了subTree的真实节点并且插入了容器;
 
         //生命周期钩子-onMounted-组件实例挂载后;
@@ -546,7 +547,8 @@ export function createRenderer(renderOptions: RenderOptions) {
           invokeArrayFns(bu)
         }
 
-        const subTree: VNode = render.call(instance.proxy, instance.proxy);//得到一个新的节点;
+        //const subTree: VNode = render.call(instance.proxy, instance.proxy);//得到一个新的节点;
+        const subTree: VNode = renderComponent(instance);//得到一个虚拟节点;//作为this,后续this会改;
         patch(instance.subTree, subTree, container, anchor, instance)
         instance.subTree = subTree//将新节点保存到实例上,变成下次更新时的老节点;
 

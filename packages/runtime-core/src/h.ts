@@ -26,8 +26,8 @@ import { isArray, isObject, isString } from "@vue/shared"
 import { createVnode, isVnode, VNode, VNodeChildren, VNodeProps } from "./vnode"
 
 
-
-export function h(type: string | symbol | object, propsChildren?: VNodeProps | VNodeChildren, children?: VNodeChildren): VNode {//其实的除了3个之外的肯定是孩子(子节点);
+export type HType = string | symbol | object | Function
+export function h(type: HType, propsChildren?: VNodeProps | VNodeChildren, children?: VNodeChildren): VNode {//其实的除了3个之外的肯定是孩子(子节点);
   const theLength = arguments.length
 
 

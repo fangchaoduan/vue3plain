@@ -1,5 +1,5 @@
 import { reactive } from "@vue/reactivity";
-import { hasOwn } from "@vue/shared";
+import { hasOwn, ShapeFlags } from "@vue/shared";
 import { VueInstance } from "./renderer";
 
 //把用户传入的rawProps中的属性区分成props或attrs,并挂载到实例instance上;
@@ -22,6 +22,11 @@ export function initProps(instance: VueInstance, rawProps: object) {
   //instance实例的上props就是一个新增的响应式数据,它会收集instance.render()中依赖的effect;
   instance.props = reactive(props)//用的应该是shallowReactive,但由于没写用的应该是shallowReactive这个方法,所以用reactive代替先;
   instance.attrs = attrs;
+
+  //上面响应式对象props是类组件中的,如果是函数式组件 应该用attrs作为props;
+  if (instance.vnode.shapeFlag & ShapeFlags.FUNCTIONAL_COMPONENT) {
+    instance.props = instance.attrs//函数式组件 应该用attrs作为props;
+  }
 }
 
 //新旧props是否发生了变化;

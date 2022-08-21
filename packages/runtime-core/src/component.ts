@@ -170,3 +170,13 @@ export function setupComponent(instance: VueInstance) {
 
 }
 
+export function renderComponent(instance: VueInstance) {
+  const { vnode, render, props } = instance;
+  if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+    return render.call(instance.proxy, instance.proxy);//得到一个虚拟节点;//作为this,后续this会改;
+
+  } else {
+    return (vnode.type as Function)(props)
+  }
+
+}

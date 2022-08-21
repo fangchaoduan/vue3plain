@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue组件runtime-dom</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <div id="root"></div>
+    <div id="abc"></div>
+  </body>
+  <script src="../../../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
+  <!-- vue内部的运行时模块-开发环境的;组件中this.$attrs是响应式对象;不包含编译; -->
+
+  <!-- <script src="./runtime-dom.global.js"></script> -->
+  <!-- 自己的运行时模块; -->
+
+  <script>
+    /* //vue2 react 类组件,一般是一个class ,要new初始化一下; 函数式组件 纯函数;
+    const { h, render } = VueRuntimeDOM;
+    const functionalComponent = (props) => {//就是函数 props 就是用户传递的属性;
+      return h("div", props.name);
+    };
+    render(h(functionalComponent, { name: "方" }), app); */
+
+    //源码中的函数式组件的props是对象,不是响应式的;
+    const { h, render } = VueRuntimeDOM;
+    const functionalComponent = (props) => {
+      //就是函数 props 就是用户传递的属性;
+      console.log("props--->", props);
+      return h("div", props.name);
+    };
+    render(h(functionalComponent, { name: "方" }), app);
+  </script>
+</html>
