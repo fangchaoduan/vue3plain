@@ -467,7 +467,7 @@ export function createRenderer(renderOptions: RenderOptions) {
   const processFragment = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, parentComponent: null | VueInstance) => {
     if (n1 === null || n1 === undefined) {
       if (!isArray(n2.children)) {
-        console.log("不是数组,直接退出挂载");
+        console.log("Fragment的子节点不是数组,直接退出挂载");
         return
       }
       mountChildren(n2.children, container, parentComponent)//走的是新增,直接把子节点挂载到容器中;
@@ -661,6 +661,12 @@ export function createRenderer(renderOptions: RenderOptions) {
 
 
   const unmount = (vnode: RenderVNode) => {
+    // debugger
+    if (vnode.type === Fragment) {//Fragment删除的时候,要清空儿子,不是删除真实dom;
+      return unmountChildren(vnode.children as VNode[])
+    } else if (vnode.shapeFlag & ShapeFlags.COMPONENT) {//如果是vnode的话,就移除组件的真实节点;
+      return unmount(vnode.component.subTree)
+    }
     hostRemove(vnode.el)//删除掉虚拟节点对应的DOM元素;
   }
 

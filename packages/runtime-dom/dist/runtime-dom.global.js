@@ -35,6 +35,7 @@ var VueRuntimeDOM = (() => {
     createTextVNode: () => createTextVNode,
     createVnode: () => createVnode,
     currentInstance: () => currentInstance,
+    defineAsyncComponent: () => defineAsyncComponent,
     effect: () => effect,
     effectScope: () => effectScope,
     getCurrentInstance: () => getCurrentInstance,
@@ -933,7 +934,7 @@ var VueRuntimeDOM = (() => {
       var _a;
       if (n1 === null || n1 === void 0) {
         if (!isArray(n2.children)) {
-          console.log("\u4E0D\u662F\u6570\u7EC4,\u76F4\u63A5\u9000\u51FA\u6302\u8F7D");
+          console.log("Fragment\u7684\u5B50\u8282\u70B9\u4E0D\u662F\u6570\u7EC4,\u76F4\u63A5\u9000\u51FA\u6302\u8F7D");
           return;
         }
         mountChildren(n2.children, container, parentComponent);
@@ -1051,6 +1052,11 @@ var VueRuntimeDOM = (() => {
       }
     };
     const unmount = (vnode) => {
+      if (vnode.type === Fragment) {
+        return unmountChildren(vnode.children);
+      } else if (vnode.shapeFlag & 6 /* COMPONENT */) {
+        return unmount(vnode.component.subTree);
+      }
       hostRemove(vnode.el);
     };
     const render2 = (vnode, container) => {
@@ -1142,6 +1148,57 @@ var VueRuntimeDOM = (() => {
       }
       return theReturn;
     }
+  }
+
+  // packages/runtime-core/src/defineAsyncComponent.ts
+  function defineAsyncComponent(options) {
+    if (typeof options === "function") {
+      options = { loader: options };
+    }
+    return {
+      setup() {
+        const loaded = ref(false);
+        const error = ref(false);
+        const loading = ref(false);
+        const { loader, timeout, errorComponent, delay, loadingComponent, onError } = options;
+        if (delay) {
+          setTimeout(() => {
+            loading.value = true;
+          }, delay);
+        }
+        let Comp = null;
+        function load() {
+          return loader().catch((err) => {
+            if (onError) {
+              return new Promise((resolve, reject) => {
+                const retry = () => resolve(load());
+                const fail = () => reject(err);
+                onError(err, retry, fail);
+              });
+            }
+          });
+        }
+        load().then((component) => {
+          Comp = component;
+          loaded.value = true;
+        }).catch((err) => error.value = err).finally(() => {
+          loading.value = false;
+        });
+        setTimeout(() => {
+          error.value = true;
+        }, timeout);
+        return () => {
+          if (loaded.value) {
+            return h(Comp);
+          } else if (error.value && errorComponent) {
+            return h(errorComponent);
+          } else if (loading.value && loadingComponent) {
+            return h(loadingComponent);
+          }
+          return h(Fragment, []);
+        };
+      }
+    };
   }
 
   // packages/runtime-dom/src/nodeOps.ts
