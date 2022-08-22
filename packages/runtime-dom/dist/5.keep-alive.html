@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vue组件runtime-dom</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+  </body>
+  <!-- <script src="../../../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script> -->
+  <!-- vue内部的运行时模块-开发环境的;组件中this.$attrs是响应式对象;不包含编译; -->
+
+  <script src="./runtime-dom.global.js"></script>
+  <!-- 自己的运行时模块; -->
+
+  <script>
+    /* const { h, render, KeepAlive, onMounted } = VueRuntimeDOM;
+    //KeepAlive使用场景:
+    //动态组件如<component :is=""></component>;
+    //路由切换 <router-view></router-view>;
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+      },
+      render: () => h("h1", "my1"),
+    };
+    render(
+      h(KeepAlive, null, {
+        default: () => h(My1),
+      }),
+      app
+    ); */
+
+    /* //两个组件:
+    const { h, render, KeepAlive, onMounted } = VueRuntimeDOM;
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+      },
+      render: () => h("h1", "my1"),
+    };
+    const My2 = {
+      setup() {
+        onMounted(() => {
+          console.log("my2的onMounted");
+        });
+      },
+      render: () => h("h1", "my2"),
+    };
+    render(
+      h(KeepAlive, null, {
+        default: () => h(My1),
+      }),
+      app
+    );
+    setTimeout(() => {
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My2),
+        }),
+        app
+      );
+    }, 1000); */
+
+    /* //先切到新组件,之后再切换回旧组件;
+    const { h, render, KeepAlive, onMounted } = VueRuntimeDOM;
+    //KeepAlive就是一个缓存的功能,没有其它的特殊含义;
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+      },
+      render: () => h("h1", "my1"),
+    };
+    const My2 = {
+      setup() {
+        onMounted(() => {
+          console.log("my2的onMounted");
+        });
+      },
+      render: () => h("h1", "my2"),
+    };
+    render(
+      h(KeepAlive, null, {
+        default: () => h(My1),
+      }),
+      app
+    );
+    setTimeout(() => {
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My2),
+        }),
+        app
+      );
+    }, 1000);
+    setTimeout(() => {
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My1),
+        }),
+        app
+      );
+    }, 2000); */
+
+    /* //先切到新组件,之后再切换回旧组件;
+    const { h, render, KeepAlive, onMounted } = VueRuntimeDOM;
+    //KeepAlive就是一个缓存的功能,没有其它的特殊含义;
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+      },
+      render: () => {
+        console.log("my1组件的render");
+        return h("h1", "my1");
+      },
+    };
+    const My2 = {
+      setup() {
+        onMounted(() => {
+          console.log("my2的onMounted");
+        });
+      },
+      render: () => h("h1", "my2"),
+    };
+    render(
+      h(KeepAlive, null, {
+        default: () => h(My1),
+      }),
+      app
+    );
+    setTimeout(() => {
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My2),
+        }),
+        app
+      );
+    }, 1000);
+    setTimeout(() => {
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My1),
+        }),
+        app
+      );
+    }, 2000); */
+
+    //先切到新组件,之后再切换回旧组件;
+    const { h, render, KeepAlive, onMounted } = VueRuntimeDOM;
+    //KeepAlive就是一个缓存的功能,没有其它的特殊含义;//缓存的是根元素;
+    //keep-alive的整个实现原理比较简单:
+    //1) 如何缓存的?缓存的就是虚拟dom及真实dom; //先放到其它内存中,但不显示;
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+      },
+      render: () => {
+        return h("h1", "my1");
+      },
+    };
+    const My2 = {
+      setup() {
+        onMounted(() => {
+          console.log("my2的onMounted");
+        });
+      },
+      render: () => h("h1", "my2"),
+    };
+    render(
+      h(KeepAlive, null, {
+        default: () => h(My1),
+      }),
+      app
+    );
+    setTimeout(() => {
+      // debugger
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My2),
+        }),
+        app
+      );
+    }, 1000);
+    // setTimeout(() => {
+    //   render(
+    //     h(KeepAlive, null, {
+    //       default: () => h(My1),
+    //     }),
+    //     app
+    //   );
+    // }, 2000);
+  </script>
+</html>

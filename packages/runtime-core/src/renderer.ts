@@ -9,6 +9,7 @@ import { hasPropsChanged, initProps, updateProps } from "./componentProps";
 import { createComponentInstance, renderComponent, setupComponent } from "./component";
 import { LifecycleHooks } from "./apiLifecycle";
 import { TeleportComponent } from "./components/Teleport";
+import { isKeepAlive } from "./components/KeepAlive";
 
 
 export type RenderOptions = NodeOperateOptions & {
@@ -23,6 +24,12 @@ export type RenderContainer = HTMLElement & {
 };
 
 export type VueInstance = {//组件的实例;
+  ctx: {
+    renderer?: {
+      createElement: (tagName: string) => HTMLElement,
+      move(vnode: RenderVNode, container: RenderContainer): void
+    }
+  },//实例的上下文,KeepAlive要用到;
   provides: object;//该组件的依赖;//所有组件用的都是父组件的provides;
   parent: null | VueInstance;//父组件;
   data: null | object;//实例的状态;
@@ -492,6 +499,15 @@ export function createRenderer(renderOptions: RenderOptions) {
   const mountComponent = (vnode: RenderVNode, container: RenderContainer, anchor: RenderAnchor = null, parentComponent: null | VueInstance) => {
     //1) 要创造一个组件的实例;
     const instance = vnode.component = createComponentInstance(vnode, parentComponent)
+
+    if (isKeepAlive(vnode)) {
+      instance.ctx.renderer = {
+        createElement: hostCreateElement,//创建元素用这个方法;
+        move(vnode: RenderVNode, container: RenderContainer) {//move的vnode肯定是组件;
+          hostInsert(vnode.component.subTree.el, container)
+        }
+      }
+    }
     //2) 给实例上赋值并进行代理;
     setupComponent(instance)
     //3) 根据vue组件实例创建一个effect,并赋值到vue组件实例上;
@@ -503,6 +519,8 @@ export function createRenderer(renderOptions: RenderOptions) {
     instance.next = null;//清空next;
     instance.vnode = next;//实例上最新的虚拟节点;
     updateProps(instance.props, next.props)
+    instance.slots = next.children as object //更新插槽;//应该还要做比对的,但目前简单点,直接用新的代替老的;
+    debugger
   }
 
   //根据vue组件实例创建一个effect,并赋值到vue组件实例上;//effect中将创建一个虚拟节点,并将虚拟节点挂载到容器上;
@@ -523,13 +541,15 @@ export function createRenderer(renderOptions: RenderOptions) {
         const subTree: VNode = renderComponent(instance);//得到一个虚拟节点;//作为this,后续this会改;
         patch(null, subTree, container, anchor, instance)//创造了subTree的真实节点并且插入了容器;
 
-        //生命周期钩子-onMounted-组件实例挂载后;
-        if (m) {
-          invokeArrayFns(m)
-        }
 
         instance.subTree = subTree//将虚拟节点挂载到实例上;
         instance.isMounted = true
+
+        //生命周期钩子-onMounted-组件实例挂载后;
+        // 得先等subTree好之后才调用;
+        if (m) {//一定要保证subTree已经有了,再去调用mounted;
+          invokeArrayFns(m)
+        }
       } else {
         //组件内部更新;
 
@@ -552,6 +572,7 @@ export function createRenderer(renderOptions: RenderOptions) {
         patch(instance.subTree, subTree, container, anchor, instance)
         instance.subTree = subTree//将新节点保存到实例上,变成下次更新时的老节点;
 
+        // console.log('instance.subTree--->', instance.subTree)
         //生命周期钩子-onUpdated-组件实例更新后;
         if (u) {
           invokeArrayFns(u)
@@ -572,12 +593,14 @@ export function createRenderer(renderOptions: RenderOptions) {
     //插槽就是children;
     const { props: prevProps, children: prevChildren } = n1;
     const { props: nextProps, children: nextChildren } = n2;
+    //只要有插槽就强制进行更新,不用比对;
+    if (prevChildren || nextChildren) {//有孩子就一定要更新,没孩子才去再去比较属性;
+      return true
+    }
+
+    //没插槽,并且属性一样,就不用更新;
     if (prevProps === nextProps) {
       return false
-    }
-    //只要有插槽就强制进行更新,不用比对;
-    if (prevChildren || nextChildren) {
-      return true
     }
     return hasPropsChanged(prevProps, nextProps)
   }
@@ -618,6 +641,7 @@ export function createRenderer(renderOptions: RenderOptions) {
   //div -> My; //A -> Fragment -> My;
   //对比新旧虚拟节点,并创建出`虚拟节点对应真实DOM`,把`虚拟节点对应真实DOM`挂载到虚拟节点上,同时把`虚拟节点对应真实DOM`挂载到容器上;
   const patch = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: RenderAnchor = null, parentComponent: null | VueInstance = null) => {
+    // debugger
     //新旧节点完全一致;
     if (n1 === n2) {
       return

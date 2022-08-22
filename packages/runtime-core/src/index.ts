@@ -18,7 +18,10 @@ export * from './component'
 export * from './apiInject'
 
 //传送门组件相关api;
-export {TeleportImpl as Teleport} from './components/Teleport'
+export { TeleportImpl as Teleport } from './components/Teleport'
+
+//KeepAlive组件相关api;
+export { KeepAliveImpl as KeepAlive } from './components/KeepAlive'
 
 //异步组件相关api
 
