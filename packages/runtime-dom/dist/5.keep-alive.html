@@ -156,7 +156,135 @@
       );
     }, 2000); */
 
-    //先切到新组件,之后再切换回旧组件;
+    /* //非KeepAlive组件-My1的状态不会保存;
+    const { h, render, KeepAlive, onMounted, ref } = VueRuntimeDOM;
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+        const theRefNumber = ref(0);
+        return { theRefNumber };
+      },
+      render: (context) => {
+        return h(
+          "h1",
+          {
+            onClick: () => {
+              context.theRefNumber++;
+            },
+          },
+          `my1:${context.theRefNumber}`
+        );
+      },
+    };
+    const My2 = {
+      setup() {
+        onMounted(() => {
+          console.log("my2的onMounted");
+        });
+        const theRefNumber = ref(0);
+        return { theRefNumber };
+      },
+      render: (context) => {
+        console.log("context--->", context);
+        return h(
+          "h1",
+          {
+            onClick: () => {
+              context.theRefNumber++;
+            },
+          },
+          `my2:${context.theRefNumber}`
+        );
+      },
+    };
+    render(
+      h('div', null, h(My1)),
+      app
+    );
+    setTimeout(() => {
+      // debugger
+      render(
+        h('div', null, h(My2)),
+        app
+      );
+    }, 10000);
+    setTimeout(() => {
+      render(
+        h('div', null, h(My1)),
+        app
+      );
+    }, 20000); */
+
+    /* //KeepAlive组件-My1的状态会保存;
+    const { h, render, KeepAlive, onMounted, ref } = VueRuntimeDOM;
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+        const theRefNumber = ref(0);
+        return { theRefNumber };
+      },
+      render: (context) => {
+        return h(
+          "h1",
+          {
+            onClick: () => {
+              context.theRefNumber++;
+            },
+          },
+          `my1:${context.theRefNumber}`
+        );
+      },
+    };
+    const My2 = {
+      setup() {
+        onMounted(() => {
+          console.log("my2的onMounted");
+        });
+        const theRefNumber = ref(0);
+        return { theRefNumber };
+      },
+      render: (context) => {
+        console.log("context--->", context);
+        return h(
+          "h1",
+          {
+            onClick: () => {
+              context.theRefNumber++;
+            },
+          },
+          `my2:${context.theRefNumber}`
+        );
+      },
+    };
+    render(
+      h(KeepAlive, null, {
+        default: () => h(My1),
+      }),
+      app
+    );
+    setTimeout(() => {
+      // debugger
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My2),
+        }),
+        app
+      );
+    }, 10000);
+    setTimeout(() => {
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My1),
+        }),
+        app
+      );
+    }, 20000); */
+
+    /* //先切到新组件,之后再切换回旧组件;
     const { h, render, KeepAlive, onMounted } = VueRuntimeDOM;
     //KeepAlive就是一个缓存的功能,没有其它的特殊含义;//缓存的是根元素;
     //keep-alive的整个实现原理比较简单:
@@ -194,13 +322,129 @@
         app
       );
     }, 1000);
-    // setTimeout(() => {
-    //   render(
-    //     h(KeepAlive, null, {
-    //       default: () => h(My1),
-    //     }),
-    //     app
-    //   );
-    // }, 2000);
+    setTimeout(() => {
+      render(
+        h(KeepAlive, null, {
+          default: () => h(My1),
+        }),
+        app
+      );
+    }, 2000); */
+
+    /* //最大缓存个数-vue的;
+    const { h, render, KeepAlive, onMounted } = VueRuntimeDOM;
+    const My3 = {
+      setup() {
+        onMounted(() => {
+          console.log("my3的onMounted");
+        });
+      },
+      render: () => {
+        return h("h1", "my3");
+      },
+    };
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+      },
+      render: () => {
+        return h("h1", "my1");
+      },
+    };
+    const My2 = {
+      setup() {
+        onMounted(() => {
+          console.log("my2的onMounted");
+        });
+      },
+      render: () => h("h1", "my2"),
+    };
+    render( h(KeepAlive, { max: 2 }, {
+      default: () => h(My1),
+    }),app);
+    setTimeout(() => {
+      render(h(KeepAlive,{ max: 2 },{
+        default: () => h(My2),
+      }),app);
+    }, 1000);
+    setTimeout(() => {
+      render(h(KeepAlive,{ max: 2 },{
+        default: () => h(My3),
+      }),app);
+    }, 2000);
+    setTimeout(() => {
+      render(h(KeepAlive,{ max: 2 },{
+        default: () => h(My1),
+      }),app);
+    }, 3000);
+    setTimeout(() => {
+      render(h(KeepAlive,{ max: 2 },{
+        default: () => h(My3),
+      }),app);
+    }, 4000);
+    //My1 -> My2 -> My3;// My2 -> My3;
+    //LRU算法,最近最久算法;后进后出;
+    //My1 -> My2 -> My3 -> My1 -> My3; //最大缓存为2时:
+    //My1 => [My1];
+    //My1 -> My2 => [My1,My2];
+    //My2 -> My3 => [My2,My3];
+    //My3 -> My1 => [My3,My1];
+    //My1 -> My3 => [My1,My3]; */
+
+    //最大缓存个数-自己的;
+    const { h, render, KeepAlive, onMounted } = VueRuntimeDOM;
+    const My3 = {
+      setup() {
+        onMounted(() => {
+          console.log("my3的onMounted");
+        });
+      },
+      render: () => {
+        return h("h1", "my3");
+      },
+    };
+    const My1 = {
+      setup() {
+        onMounted(() => {
+          console.log("my1的onMounted");
+        });
+      },
+      render: () => {
+        return h("h1", "my1");
+      },
+    };
+    const My2 = {
+      setup() {
+        onMounted(() => {
+          console.log("my2的onMounted;");
+        });
+      },
+      render: () => h("h1", "my2"),
+    };
+    render( h(KeepAlive, { max: 2 }, {
+      default: () => h(My1),
+    }),app);
+    setTimeout(() => {
+      render(h(KeepAlive,{ max: 2 },{
+        default: () => h(My2),
+      }),app);
+    }, 1000);
+    setTimeout(() => {
+      render(h(KeepAlive,{ max: 2 },{
+        default: () => h(My3),
+      }),app);
+    }, 2000);
+    setTimeout(() => {
+      render(h(KeepAlive,{ max: 2 },{
+        default: () => h(My1),
+      }),app);
+    }, 3000);
+    setTimeout(() => {
+      render(h(KeepAlive,{ max: 2 },{
+        default: () => h(My3),
+      }),app);
+    }, 4000);
   </script>
 </html>

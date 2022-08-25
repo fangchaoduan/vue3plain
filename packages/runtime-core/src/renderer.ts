@@ -25,9 +25,11 @@ export type RenderContainer = HTMLElement & {
 
 export type VueInstance = {//组件的实例;
   ctx: {
+    activate?: (vnode: VNode & { component?: VueInstance; }, container: RenderContainer, anchor: RenderAnchor) => void;
+    deactivate?: (vnode: RenderVNode) => void;
     renderer?: {
       createElement: (tagName: string) => HTMLElement,
-      move(vnode: RenderVNode, container: RenderContainer): void
+      move(vnode: RenderVNode, container: RenderContainer, anchor?: RenderAnchor): void
     }
   },//实例的上下文,KeepAlive要用到;
   provides: object;//该组件的依赖;//所有组件用的都是父组件的provides;
@@ -168,15 +170,15 @@ export function createRenderer(renderOptions: RenderOptions) {
     }
   }
 
-  const unmountChildren = (children: VNode[]) => {
+  const unmountChildren = (children: VNode[], parentComponent: null | VueInstance) => {
     for (let index = 0; index < children.length; index++) {
       //debugger
-      unmount(children[index])
+      unmount(children[index], parentComponent)
     }
   }
 
 
-  const patchKeyedChildren = (c1: VNode[], c2: VNode[], el: HTMLElement) => {//比较两个元素
+  const patchKeyedChildren = (c1: VNode[], c2: VNode[], el: HTMLElement, parentComponent: null | VueInstance) => {//比较两个元素
     let i = 0;//表示新旧虚拟节点从前向后循环时最后一个相等的角标;
     let e1 = c1.length - 1;//表示旧虚拟节点从前向后循环时最后一个相等的角标;
     let e2 = c2.length - 1;//表示新虚拟节点从前向后循环时最后一个相等的角标;
@@ -230,7 +232,7 @@ export function createRenderer(renderOptions: RenderOptions) {
       //i和e1之间的是卸载的部份;//即[i,i+1,i+2,...,e1]中对应角标是要卸载的;
       if (i <= e1) {
         for (; i <= e1; i++) {
-          unmount(c1[i])
+          unmount(c1[i], parentComponent)
         }
       }
     }
@@ -264,7 +266,7 @@ export function createRenderer(renderOptions: RenderOptions) {
       const oldChild = c1[index];//老的孩子;
       const newIndex = keyToNewIndexMap.get(oldChild.key)//用老的孩子去新的里面找;
       if (newIndex === undefined) {
-        unmount(oldChild)//多余的删掉;
+        unmount(oldChild, parentComponent)//多余的删掉;
       } else {
         //新的位置对应的老的位置; //如果数组里放的值>0,说明已经patch过了;
         newIndexToOldIndexMap[newIndex - s2] = index + 1;//用来标记当前所patch过的结果;
@@ -353,7 +355,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
       if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {//判断老节点为数组;
         //删除所有子节点;
-        unmountChildren(c1 as VNode[])//文本	数组	（删除旧节点列表，设置文本内容）;
+        unmountChildren(c1 as VNode[], parentComponent)//文本	数组	（删除旧节点列表，设置文本内容）;
       }
 
       if (c1 !== c2) {
@@ -373,10 +375,10 @@ export function createRenderer(renderOptions: RenderOptions) {
         //判断新虚拟节点为数组;
         if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
           //diff算法;
-          patchKeyedChildren(c1 as VNode[], c2 as VNode[], el)
+          patchKeyedChildren(c1 as VNode[], c2 as VNode[], el, parentComponent)
         } else {
           //现在新虚拟节点不是数组,就代表新虚拟节点为空? (文本和空 删除以前的);
-          unmountChildren(c1 as VNode[])
+          unmountChildren(c1 as VNode[], parentComponent)
         }
       } else {
         //两种情况;
@@ -519,8 +521,13 @@ export function createRenderer(renderOptions: RenderOptions) {
     instance.next = null;//清空next;
     instance.vnode = next;//实例上最新的虚拟节点;
     updateProps(instance.props, next.props)
-    instance.slots = next.children as object //更新插槽;//应该还要做比对的,但目前简单点,直接用新的代替老的;
-    debugger
+
+    // instance.slots = next.children as object //更新插槽;//应该还要做比对的,但目前简单点,直接用新的代替老的;
+    //这样写不行,组件中setup()中解析后,依旧会是老对象;
+    //也就是说,这里直接改了整个引用,产生了新引用及旧引用,但setup()如果用花括号语法解析,那么setup()中引用的永远是旧引用;实际上需要的是更新旧引用的值就好了;
+
+    Object.assign(instance.slots, next.children as object)//更新插槽;
+    // debugger
   }
 
   //根据vue组件实例创建一个effect,并赋值到vue组件实例上;//effect中将创建一个虚拟节点,并将虚拟节点挂载到容器上;
@@ -545,6 +552,7 @@ export function createRenderer(renderOptions: RenderOptions) {
         instance.subTree = subTree//将虚拟节点挂载到实例上;
         instance.isMounted = true
 
+        // instance.vnode.el = subTree.el//把虚拟节点上绑定的el,存到vnode的el上;
         //生命周期钩子-onMounted-组件实例挂载后;
         // 得先等subTree好之后才调用;
         if (m) {//一定要保证subTree已经有了,再去调用mounted;
@@ -627,8 +635,16 @@ export function createRenderer(renderOptions: RenderOptions) {
   const processComponent = (n1: RenderVNode, n2: RenderVNode, container: RenderContainer, anchor: RenderAnchor = null, parentComponent: null | VueInstance) => {//统一处理组件,里面再区分是普通的还是函数式组件;
     //不过函数式组件已经不建议使用了;[函数式组件-vue官方文档](https://v3.cn.vuejs.org/guide/migration/functional-components.html#函数式组件);
 
-    if (n1 === null) {
-      mountComponent(n2, container, anchor, parentComponent)//组件的挂载;
+    if (n1 === null) {//keep-alive组件时:假设my1->my2->my1;
+      // debugger
+      if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+        //keep-alive组件的挂载;
+        parentComponent.ctx.activate(n2, container, anchor)
+      } else {
+        mountComponent(n2, container, anchor, parentComponent)//组件的挂载;
+      }
+      //mountComponent(n2, container, anchor, parentComponent)
+
     } else {
       //组件更新靠的是props;
       updateComponent(n1, n2)
@@ -648,7 +664,7 @@ export function createRenderer(renderOptions: RenderOptions) {
     }
     //旧节点存在,但新旧节点元素类型不一致;//判断两个节点是否相同,不相同就卸载再添加;
     if (n1 && !isSameVnode(n1, n2)) {
-      unmount(n1)//删除老的;
+      unmount(n1, parentComponent)//删除老的;
       n1 = null;//旧节点置为null,再走后续的新增流程;
     }
 
@@ -675,7 +691,7 @@ export function createRenderer(renderOptions: RenderOptions) {
           (type as TeleportComponent).process(n1, n2, container, anchor, {
             mountChildren,
             patchChildren,
-            move(vnode: RenderVNode, container: Element) {
+            move(vnode: RenderVNode, container: Element, anchor: RenderAnchor) {
               hostInsert(vnode.component ? vnode.component.subTree.el : vnode.el, container, anchor)
             }
             //... 其它方法;
@@ -686,14 +702,18 @@ export function createRenderer(renderOptions: RenderOptions) {
   }
 
 
-  const unmount = (vnode: RenderVNode) => {
+  const unmount = (vnode: RenderVNode, parentComponent: null | VueInstance) => {
     // debugger
     if (vnode.type === Fragment) {//Fragment删除的时候,要清空儿子,不是删除真实dom;
-      return unmountChildren(vnode.children as VNode[])
+      return unmountChildren(vnode.children as VNode[], parentComponent)
+    } else if (vnode.shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+      return parentComponent.ctx.deactivate(vnode);//直接把虚拟节点传递给keep-alive组件中删除的方法;//进入这个if分支里,parentComponent必定为keep-alive组件;vnode为插槽;
+      // return 
     } else if (vnode.shapeFlag & ShapeFlags.COMPONENT) {//如果是vnode的话,就移除组件的真实节点;
-      return unmount(vnode.component.subTree)
+      // console.log('真实的卸载: vnode--->', vnode)
+      return unmount(vnode.component.subTree, null)
     }
-    hostRemove(vnode.el)//删除掉虚拟节点对应的DOM元素;
+    hostRemove(vnode.el)//删除掉虚拟节点对应的DOM元素;//el.removeChild();
   }
 
   //用新传入的虚拟节点,并把虚拟节点挂载到容器上;
@@ -706,7 +726,7 @@ export function createRenderer(renderOptions: RenderOptions) {
 
       //之前确实渲染过了,那么就卸载掉dom;
       if (container._vnode) {
-        unmount(container._vnode)
+        unmount(container._vnode, null)
       }
 
     } else {

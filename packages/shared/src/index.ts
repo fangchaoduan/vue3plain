@@ -47,8 +47,8 @@ export const enum ShapeFlags {
   SLOTS_CHILDREN = 32, //1<<5; //;
   TELEPORT = 64, //1<<6; //;
   SUSPENSE = 128, //1<<7; //;
-  COMPONENT_SHOULD_KEEP_ALIVE = 256, //1<<8; //;
-  COMPONENT_KEPT_ALIVE = 512, //1<<9; //;
+  COMPONENT_SHOULD_KEEP_ALIVE = 256, //1<<8; //keep-alive子节点专用;标识这个组件是keep-alive的子节点,稍后的卸载流程中是假的卸载(keep-alive组件中的自定义方法);
+  COMPONENT_KEPT_ALIVE = 512, //1<<9; //keep-alive子节点专用,表示该子节点初始化的时候,不要走创建新的真实DOM了,而是在缓存中取(keep-alive组件中的自定义方法);
   COMPONENT = 6 //COMPONENT = ShapeFlags.FUNCTIONAL_COMPONENT | ShapeFlags.STATEFUL_COMPONENT; //即: COMPONENT = 2 | 4;//组件包含函数式组件与状态组件;
 }
 /* //位运算:&,|适合权限的组合;

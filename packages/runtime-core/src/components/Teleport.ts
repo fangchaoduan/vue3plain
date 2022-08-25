@@ -50,7 +50,7 @@ export type TeleportComponent = {
 export type TeleportInternals = {
   mountChildren: (children: ConvertibleVNode[], container: HTMLElement, parentComponent?: null | VueInstance) => void;//用于挂载子节点的;
   patchChildren: (n1: RenderVNode, n2: RenderVNode, el: HTMLElement, parentComponent?: null | VueInstance) => void;//用于比对子节点内容的;
-  move(vnode: RenderVNode, container: Element): void;//用于移动子节点的;
+  move(vnode: RenderVNode, container: Element, anchor?: RenderAnchor): void;//用于移动子节点的;
   [property: string]: Function;
 }
 

@@ -21,6 +21,7 @@ export function isSameVnode(n1: VNode, n2: VNode) {
 export type ComponentRender = () => VNode
 export type ComponentSetup = (props?: object, context?: object) => (ComponentRender | object)
 export type VueComponent = {
+  name?: string,//组件的名字;
   data?: () => (object);//vue2中data可以是函数或对象;但vue3中data只能是函数;
   render?: ComponentRender;
   props?: (() => (object)) | object;
@@ -42,6 +43,7 @@ export type VNodeChildren = undefined | null | ConvertibleVNode | Array<Converti
 
 //虚拟节点类型,可以认为它不包含null与undefined;
 export type VNode = {
+  component?: any;//旧虚拟节点?
   type: VNodeType;
   props: VNodeProps;
   children: VNodeChildren;
